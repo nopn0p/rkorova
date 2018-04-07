@@ -15,6 +15,13 @@ terrible LD_PRELOAD userland rootkit
   \/_/ /_/   \/_/\/_/   \/_____/   \/_/ /_/   \/_____/   \/_/      \/_/\/_/ 
                                                                           
 ```
+### Installation
+* step 1: run install.sh to compile 
+* step 2: chgrp to the magic GID 
+* step 3: create magic user 
+* step 4: install rkorova.so 
+* step 5: ????
+* step 6: be eleet 
 
 ### Upcoming features
 * complete anti-debugging features 
@@ -26,4 +33,4 @@ terrible LD_PRELOAD userland rootkit
 
 ### Disclaimer 
 I am not responsible for any illegal use of this software. If you're 
-retarded enough to actually use this rootkit, you need to get checked. 
+retarded enough to actually use this rootkit, you should get tested.
