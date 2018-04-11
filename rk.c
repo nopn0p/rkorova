@@ -466,11 +466,9 @@ FILE *fopen(const char *pathname, const char *mode)
 
 char *fgets(char *s, int size, FILE *stream)
 { 
-	int i; 
-	struct stat filestat;
-	char *p; 
-	char *x;
 
+	char *p;
+	struct stat filestat;
 	HOOK(fgets); 
 	p = old_fgets(s, size, stream);
 	if (p == NULL)
