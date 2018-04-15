@@ -499,9 +499,3 @@ void init(void)
 	#endif
 }
 
-
-void __attribute ((destructor)) rkexit(void)
-{
-	/* do something */ 
-} 
-
