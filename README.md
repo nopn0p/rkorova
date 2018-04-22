@@ -7,6 +7,8 @@ terrible LD_PRELOAD userland rootkit
 * hides files and directories through username and magic GID comparisons 
 * shitty plaintext backconnect shell 
 
+Yes, I am aware that the implementation of stat in some hooked functions is inconsistent. 
+
 ```
  ______     __  __     ______     ______     ______     __   __   ______    
 /\  == \   /\ \/ /    /\  __ \   /\  == \   /\  __ \   /\ \ / /  /\  __ \   
@@ -32,5 +34,4 @@ terrible LD_PRELOAD userland rootkit
 * kernel module?
 
 ### Disclaimer 
-I am not responsible for any illegal use of this software. If you're 
-retarded enough to actually use this rootkit, you should get tested.
+I am not responsible for any illegal use of this software. Please don't use this rootkit. 

