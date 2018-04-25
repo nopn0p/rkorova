@@ -1,6 +1,6 @@
 # rkorova
 
-terrible LD_PRELOAD userland rootkit 
+shitty LD_PRELOAD userland rootkit 
 
 ### Features
 * (some) anti-debugging - strings are xor'ed out and rkorova cleans up after itself
@@ -33,5 +33,15 @@ Yes, I am aware that the implementation of stat in some hooked functions is inco
 * network hiding 
 * kernel module?
 
-### Disclaimer 
-I am not responsible for any illegal use of this software. Please don't use this rootkit. 
+### Default values: 
+* MAGIC = "imgay"
+* MAGICGID = 1337 
+* EXECPW = installgentoo
+* SHELLPW = bl1ng
+* PROC = /proc
+* DEFAULT_PORT = 61040
+* IP = 1.3.3.7
+* XOR key = 0x2A
+Change these values with the xor.py tool included, or defiler will pwn ur box
+
+
