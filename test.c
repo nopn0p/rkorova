@@ -2,8 +2,8 @@
 
 int main()
 {
-	printf("im gay"); 
+	printf("im gay\n"); 
 	return 0;
 }
-int open(const char *path, int oflag, mode_t mode); 
+int open(const char *path, int oflag); 
 
