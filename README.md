@@ -7,8 +7,6 @@ shitty LD_PRELOAD userland rootkit
 * hides files and directories through username and magic GID comparisons 
 * shitty plaintext backconnect shell 
 
-Yes, I am aware that the implementation of stat in some hooked functions is inconsistent. 
-
 ```
  ______     __  __     ______     ______     ______     __   __   ______    
 /\  == \   /\ \/ /    /\  __ \   /\  == \   /\  __ \   /\ \ / /  /\  __ \   
@@ -44,4 +42,6 @@ Yes, I am aware that the implementation of stat in some hooked functions is inco
 * XOR key = 0x2A
 Change these values with the xor.py tool included, or defiler will pwn ur box
 
+### Uses 
 
+Please don't use this rootkit for literally anything, it's terrible and probably can't even fool rkhunter. Unless your sysadmin is Steven Landes, you will get pwned and exposed within a day. Also, rooting people is illegal :) 
