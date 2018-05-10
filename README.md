@@ -46,7 +46,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 Change these values lol 
 
 ### Known issues 
-* stat segfaults whenever it attempts to display gid - i'm working on a fix, go away 
+* ~~stat segfaults whenever it attempts to display gid~~ - sorta fixed, but now it doesn't say the file is hidden
 * CLEAN macro is used inconsistently, which leads to MAGIC leaking - i know, will totally fix within the next 2 weeks 
 * bash autocomplete shows hidden files - i have no idea why this is happening but i promise it won't
 * file command states hidden files as "empty", not "nonexistent" - should be fixed as of May 8 2018, but probably won't work until i find the root cause of the problem
