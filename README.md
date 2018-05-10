@@ -54,4 +54,15 @@ Change these values lol
 ### Uses 
  
 dont use this for anything  
-its illegal 
+its illegal
+
+#### FAQ
+
+**your code is absolute garbage, you put brackets on newlines how are you allowed to live?**  
+sorry  
+
+**someone killed me in roblox, how do i use rkorova to hack him and steal his credit card?**  
+ask on leakforums  
+
+**ur gay**  
+no u   
