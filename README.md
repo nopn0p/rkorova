@@ -21,7 +21,8 @@ shitty LD_PRELOAD userland rootkit
 * step 3: create magic user 
 * step 4: install rkorova.so 
 * step 5: ????
-* step 6: be eleet 
+* step 6: be eleet   
+
 rkorova will (ideally) hide any files that are under the magic GID and/or the hidden user. in fact, you don't even need a user as long as you hide all files under the GID
 
 ### Upcoming features
@@ -40,7 +41,8 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * PROC = /proc
 * DEFAULT_PORT = 61040
 * IP = 1.3.3.7
-* XOR key = 0x2A
+* XOR key = 0x2A  
+
 Change these values lol 
 
 ### Known issues 
@@ -51,5 +53,5 @@ Change these values lol
 
 ### Uses 
  
-dont use this for anything 
+dont use this for anything  
 its illegal 
