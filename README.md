@@ -45,6 +45,16 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 
 Change these values lol 
 
+### Hiding files example 
+```
+[bandit@box hidden] touch imgay.txt 
+[bandit@box hidden] ls 
+imgay.txt 
+[bandit@box hidden] sudo chgrp 1337 imgay.txt 
+[bandir@box hidden] ls
+
+```
+
 ### Known issues 
 * ~~stat segfaults whenever it attempts to display gid~~ - ~~sorta fixed, but now it doesn't say the file is hidden~~ - fixed. 
 * CLEAN macro is used inconsistently, which leads to MAGIC leaking - i know, will totally fix within the next 2 weeks 
