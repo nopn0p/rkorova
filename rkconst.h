@@ -13,5 +13,4 @@
 #define IP		"127.0.0.1"
 
 //important strings
-#define ptrace_msg "\x43\xa\x49\xa\x5f\xa\x10\x3" // i c u :) 
-
+#define PTRACE_MSG "\x48\x46\x1b\x44\x4d\xa\x48\x46\x1b\x44\x4d" // bl1ng bl1ng

