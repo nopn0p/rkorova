@@ -6,6 +6,7 @@ shitty LD_PRELOAD userland rootkit
 * (some) anti-debugging - strings are xor'ed out and rkorova cleans up after itself
 * hides files and directories through username and magic GID  
 * shitty plaintext backconnect shell 
+* accept() backdoor [not working yet] derived from azazael
 
 ```
  ______     __  __     ______     ______     ______     __   __   ______    
@@ -27,7 +28,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 
 ### Upcoming features
 * complete anti-debugging features 
-* accept() backdoor 
+* ~accept() backdoor~ 
 * log sanitization
 * antidetection 
 * network hiding 
