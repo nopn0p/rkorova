@@ -37,7 +37,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * kernel module?
 
 ### Default values: 
-* MAGIC = "imgay"
+* MAGIC = "mochi"
 * MAGICGID = 1337 
 * EXECPW = installgentoo
 * SHELLPW = bl1ng
