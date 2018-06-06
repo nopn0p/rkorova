@@ -43,7 +43,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * SHELLPW = bl1ng
 * PROC = /proc
 * DEFAULT_PORT = 61040
-* IP = 1.3.3.7
+* IP = 127.0.0.1
 * XOR key = 0x2A  
 
 Change these values lol 
