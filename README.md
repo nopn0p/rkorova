@@ -1,6 +1,6 @@
 # rkorova
 
-shitty LD_PRELOAD userland rootkit 
+flaming garbage unusable worst-case-scenario LD_PRELOAD userland rootkit 
 
 ### Features
 * (some) anti-debugging - strings are xor'ed out and rkorova cleans up after itself. rkorova also breaks ptrace with a HILARIOUS message of your choice! 
