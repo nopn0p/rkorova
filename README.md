@@ -67,16 +67,10 @@ mike_virus_grsec.txt
 
 ### Uses 
  
-dont use this for anything  
-its illegal
+dont use this for anything illegal or consensual, unless your target is literally a dog you will get 0wned and xp0sed or get laughed at by your employer 
 
-#### FAQ
+### References 
 
-**your code is absolute garbage, you put brackets on newlines how are you allowed to live?**  
-sorry  
-
-**someone killed me in roblox, how do i use rkorova to hack him and steal his credit card?**  
-ask on leakforums  
-
-**ur gay**  
-no u   
+http://systemd.rip/post/33
+https://haxelion.eu/article/LD_NOT_PRELOADED_FOR_REAL/
+Reverse Engineering for Beginners by Denis Yurichev
