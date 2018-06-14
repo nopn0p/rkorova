@@ -71,6 +71,7 @@ dont use this for anything illegal or consensual, unless your target is literall
 
 ### References 
 
-http://systemd.rip/post/33
-https://haxelion.eu/article/LD_NOT_PRELOADED_FOR_REAL/
-Reverse Engineering for Beginners by Denis Yurichev
+* https://haxelion.eu/article/LD_NOT_PRELOADED_FOR_REAL/
+* Reverse Engineering for Beginners by Denis Yurichev
+* http://fluxius.handgrep.se/2011/10/31/the-magic-of-ld_preload-for-userland-rootkits/
+* https://blog.fpmurphy.com/2012/09/all-about-ld_preload.html
