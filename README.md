@@ -2,7 +2,7 @@
 
 flaming garbage unusable worst-case-scenario LD_PRELOAD userland rootkit 
 
-### Features
+## Features
 * (some) anti-debugging - strings are xor'ed out and rkorova cleans up after itself. rkorova also breaks ptrace with a HILARIOUS message of your choice! 
 * hides files and directories through username and magic GID  
 * shitty plaintext backconnect shell 
@@ -16,7 +16,7 @@ flaming garbage unusable worst-case-scenario LD_PRELOAD userland rootkit
   \/_/ /_/   \/_/\/_/   \/_____/   \/_/ /_/   \/_____/   \/_/      \/_/\/_/ 
                                                                           
 ```
-### Installation
+## Installation
 * step 1: change default values (important!!)
 * step 2: run compile.sh to compile 
 * step 3: create magic user 
@@ -28,7 +28,7 @@ flaming garbage unusable worst-case-scenario LD_PRELOAD userland rootkit
 
 rkorova will (ideally) hide any files that are under the magic GID and/or the hidden user. in fact, you don't even need a user as long as you hide all files under the GID
 
-### Upcoming features
+## Upcoming features
 * complete anti-debugging features 
 * ~accept() backdoor~
 * log sanitization
@@ -37,7 +37,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * ~network hiding~ 
 * kernel module? - COMING SOON 
 
-### Default values: 
+## Default values: 
 * MAGIC = "mochi"
 * MAGICGID = 1337 
 * EXECPW = installgentoo
@@ -49,7 +49,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * MAGICENV = ""oldmcdonald" -- the value can be whatever you want, subspace just wants to know it exists 
 Change these values lol 
 
-### Hiding files example 
+## Hiding files example 
 ```
 [razzledazzle@box hidden] touch mike_virus_grsec.txt 
 [razzledazzle@box hidden] ls 
@@ -58,22 +58,23 @@ mike_virus_grsec.txt
 [razzledazzle@box hidden] ls
 
 ```
-### FAQ
+## FAQ
 
+###Why isn't there an installer?
+ Because as useless as this kit is, there is an ever-present risk of Bred-Spread-covered 12 year olds using this to try and root [irrelevantskidsquad.tk], which is hilarious but also illegal.
 
-
-### Known issues 
+## Known issues 
 * ~~stat segfaults whenever it attempts to display gid~~ - ~~sorta fixed, but now it doesn't say the file is hidden~~ - fixed. 
 * ~~CLEAN macro is used inconsistently, which leads to MAGIC leaking - i know, will totally fix within the next 2 weeks~~ - fixed. 
 * bash autocomplete shows hidden files
 * vim segfaults - this is a weird one, probably has something to do with how i wrote open(). in the meantime, tell ur targets to use nano.
 * ~~file command states hidden files as "empty", not "nonexistent" - should be fixed as of May 8 2018, but probably won't work until i find the root cause of the problem~~ fixed. stat() hook was done incorrectly.
 
-### Uses 
+## Uses 
  
 dont use this for anything illegal or consensual, unless your target is literally a dog you will get 0wned and xp0sed or get laughed at by your employer 
 
-### References 
+## References 
 
 * https://haxelion.eu/article/LD_NOT_PRELOADED_FOR_REAL/
 * Reverse Engineering for Beginners by Denis Yurichev
