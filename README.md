@@ -60,7 +60,7 @@ mike_virus_grsec.txt
 ```
 ## FAQ
 
-###Why isn't there an installer?
+### Why isn't there an installer?
  Because as useless as this kit is, there is an ever-present risk of Bred-Spread-covered 12 year olds using this to try and root [irrelevantskidsquad.tk], which is hilarious but also illegal.
 
 ## Known issues 
