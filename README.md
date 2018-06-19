@@ -33,8 +33,8 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * log sanitization
 * antidetection 
 * pam (pluggable authentication modules) backdoor
-* network hiding 
-* kernel module?
+* ~network hiding~ 
+* kernel module? - COMING SOON 
 
 ### Default values: 
 * MAGIC = "mochi"
