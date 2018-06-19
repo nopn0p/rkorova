@@ -20,10 +20,11 @@ flaming garbage unusable worst-case-scenario LD_PRELOAD userland rootkit
 * step 1: change default values (important!!)
 * step 2: run compile.sh to compile 
 * step 3: create magic user 
-* step 4: replace ld_preload with librkorova.so 
-* step 5: hide any other files not owned by you with chgrp (magic gid) (file) 
-* step 6: ?????
-* step 7: be eleet and brag about pwning someone on irc 
+* step 4: replace ld_preload with librkorova.so
+* step 5: set your magic env var in ~/.bash_profile or whatever 
+* step 6: hide any other files not owned by you with chgrp (magic gid) (file) 
+* step 7: ?????
+* step 8: be eleet and brag about pwning someone on irc 
 
 rkorova will (ideally) hide any files that are under the magic GID and/or the hidden user. in fact, you don't even need a user as long as you hide all files under the GID
 
@@ -45,7 +46,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * DEFAULT_PORT = 61040
 * IP = 127.0.0.1
 * XOR key = 0x2A  
-
+* MAGICENV = ""oldmcdonald" -- the value can be whatever you want, subspace just wants to know it exists 
 Change these values lol 
 
 ### Hiding files example 
@@ -57,6 +58,9 @@ mike_virus_grsec.txt
 [razzledazzle@box hidden] ls
 
 ```
+### FAQ
+
+
 
 ### Known issues 
 * ~~stat segfaults whenever it attempts to display gid~~ - ~~sorta fixed, but now it doesn't say the file is hidden~~ - fixed. 

