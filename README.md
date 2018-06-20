@@ -47,7 +47,7 @@ rkorova will (ideally) hide any files that are under the magic GID and/or the hi
 * IP = 127.0.0.1
 * XOR key = 0x2A  
 * MAGICENV = ""oldmcdonald" -- the value can be whatever you want, subspace just wants to know it exists 
-Change these values lol 
+#Change these values lol 
 
 ## Hiding files example 
 ```
