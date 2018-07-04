@@ -10,7 +10,7 @@
 
 void fake(int argc, char **argv[]); 	
 int owned(void);
-
+/*
 int owned(void)
 { 
 	int x; 
@@ -33,4 +33,4 @@ void fake(int argc, char **argv[])
                  --list [{tests | {lang | languages} | rootkits | perl | propfiles}] |
                  --config-check | --version | --help} [options]\n");
 	}
-}
+}*/
