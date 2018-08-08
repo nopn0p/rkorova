@@ -8,6 +8,11 @@
  * faked output so they think they're 
  * running it instead. */ 
 
+/*
+Note from nathan:
+	This isn't actually needed, because of how rkhunter works. It won't detect this anyway. 
+*/
+
 void fake(int argc, char **argv[]); 	
 int owned(void);
 /*
