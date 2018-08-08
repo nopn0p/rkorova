@@ -21,16 +21,14 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
 		#endif 
 		return;
 	}
-
-	switch(ip->ip_p)
-	{ 
-		case IPPROTO_TCP: 
-			break;
-		default: 
-			if (old_callback)
-				old_callback(args, header, packet); 
-			return; 
-	} 
+	
+	if (ip->ip_p != IPPROTO_TCP) 
+	{
+		if (old_callback)
+			old_callback(args, header, packet); 
+		return; 
+	}
+	
 	tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip); 
 	size_tcp = TH_OFF(tcp)*4; 
 	if (size_tcp < 20)
@@ -43,15 +41,12 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
 	sport = htons(tcp->th_sport); 
 	dport = htons(tcp->th_dport); 
 
-	if ((sport == DEFAULT_PORT) || (dport == DEFAULT_PORT))
-	{ 
-		return; 
-	} 
-	else
+	if ((sport != DEFAULT_PORT) || (dport != DEFAULT_PORT))
 	{ 
 		if (old_callback)
 			old_callback(args, header, packet); 
 	}
+	
 	return; 
 } 
 
