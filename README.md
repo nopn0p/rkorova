@@ -25,14 +25,10 @@ bad userland LD_PRELOAD rootkit
 
 rkorova will (ideally) hide any files that are under the magic GID and/or the hidden user. in fact, you don't even need a user as long as you hide all files under the GID
 
-## Upcoming features
-* complete anti-debugging features 
-* ~accept() backdoor~
-* log sanitization
-* antidetection 
-* pam (pluggable authentication modules) backdoor
-* ~network hiding~ 
-* kernel module? - COMING SOON 
+## Known Issues 
+rkorova is not actually meant to be deployed in a real engagement and is pretty awful at hiding in that regard. I am not responsible for any illegal / stupid things that happen because you decided to act el8 in front of your friends on IRC 
+* If a file is hidden, it will appear in bash autocomplete but cannot be interacted with.
+* rkorova sometimes completely breaks when git is involved 
 
 ## Default values: 
 * MAGIC = "mochi"

