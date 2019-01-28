@@ -22,7 +22,7 @@
 #include "rkconst.h"
 //function pointers to hooked functions
 
-// too lazy to group these hooks
+// misc functions 
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
 char *(*old_fgets)(char *s, int size, FILE *stream);
 long int (*old_ptrace)(enum __ptrace_request request, ...);
