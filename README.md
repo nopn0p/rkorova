@@ -24,10 +24,7 @@ The `LD_PRELOAD` trick does not work in these cases:
 1. statically linked binaries 
 2. any program that uses the `asm` compiler to make direct syscalls 
 3. Golang programs, because they use their own syscall wrappers
+4. Constructors are not multithread-safe :(
 
-## How to use 
-1. Set values in `rkconst.h`
-2. Compile 
-3. Set up hidden directories 
-4. Place `export` line into whatever shell startup file you want or in `/etc/profile`
-5. Enjoy!
+## Disclaimer 
+I am not responsible for anything stupid, illegal or otherwise unethical you do with this. This is something I wrote for fun/educational purposes and is not meant to be used for anything else. 

