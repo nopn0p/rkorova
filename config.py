@@ -59,7 +59,7 @@ def main():
         f.close()
         here = os.path.dirname(os.path.realpath(__file__))
         subdir = "utils"
-        filename = "xor.c" 
+        filename = "strxor.c" 
         path = os.path.join(here, subdir, filename)
         with open(path, "r") as f:
             data = f.readlines()
@@ -67,6 +67,7 @@ def main():
         with open(path, "w") as f: 
             f.write(''.join(data))
         print(col.BOLD + col.PASS + "[~] " + col.ENDC + "Config successfully written.")
+        print(col.BOLD + col.PASS + "[~] " + col.ENDC + "./compile.sh to compile.")
     except IOError: 
         print(col.BOLD + col.BLNK + col.FAIL + "[!] " + col.ENDC + "Error writing to file.")
         exit() 
