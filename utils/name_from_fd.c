@@ -7,7 +7,7 @@
 int name_from_fd(int fd, char *buf, size_t size)
 { 
 	char name[256]; 
-	char *proc_path = strdup(PROC_PATH); xor(proc_path);	
+	char *proc_path = strdup(PROC_PATH); strxor(proc_path);	
 	snprintf(name, sizeof(name), proc_path, fd);
 	ssize_t ret = readlink(name, buf, size); 
 	

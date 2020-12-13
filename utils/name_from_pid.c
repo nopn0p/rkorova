@@ -6,7 +6,7 @@ int name_from_pid(char *pid, char *buf)
 { 
 	if (strspn(pid, "0123456789") != strlen(pid)) return 0; 
 	char tmp[256]; 
-	char *proc = strdup(PROC); xor(proc);
+	char *proc = strdup(PROC); strxor(proc);
 	
 	/* find dir of pid in proc */
 	snprintf(tmp, sizeof(tmp), "%s/%s/stat", proc, pid); 
